@@ -1,0 +1,91 @@
+# Autolinium - Comprehensive Feature Matrix
+
+This document serves as the final checklist for all features required in the Autolinium Internal Office & KPI Management System, based on the Product Requirements Document (PRD).
+
+---
+
+## 1. Admin/CEO Control Center (Full SPEC Management)
+
+### Attendance Oversight
+- [ ] **Daily Heatmap:** Visual representation of office-wide attendance.
+- [ ] **Presence Monitoring:** Real-time list of who is "On Office" vs "Home Office".
+- [ ] **Manual Override:** Ability to edit any daily attendance or lateness record.
+- [ ] **Request Approval:** Approve or Reject Leave and Late Arrival requests.
+- [ ] **Metadata Management:** Manually add "Promise Time" and "Granted/Non-granted" status for late arrivals.
+
+### Meeting & Task Governance
+- [ ] **Internal Meetings:** 
+    - Create meetings with Agenda and Date.
+    - Select attendees.
+    - Mark status: Attended, Informed Skip, or Uninformed Skip.
+- [ ] **Client Meetings:** 
+    - Review logs of client meetings (Client name, scheduled vs join time).
+    - Apply manual behavior penalties (0-10 pts) based on performance.
+    - Mark Informed/Uninformed skips.
+- [ ] **Project Task Manager:** 
+    - Create tasks with specific deadlines.
+    - Assign employees.
+    - Review "Valid Reasons" for delays and decide whether to waive penalties.
+
+### KPI & Performance Engine
+- [ ] **Manual Data Entry:** Enter monthly scores for KPI 8 (Value Added) and KPI 9 (Innovation).
+- [ ] **Disciplinary System:** 
+    - Issue official Warnings.
+    - Add manual behavior penalties (deducted from KPI scores).
+    - View full warning/penalty history for any employee.
+- [ ] **Analytics & Alerts:** 
+    - View KPI breakdown per category and per employee.
+    - Automatic alerts for low performance (KPI < 75).
+    - Track "Termination Risk" for employees failing to meet targets for 3 months.
+- [ ] **Payroll & Incentives:** 
+    - View monthly bonus calculations ( (KPI - 75) * 1000 BDT ).
+    - Track quarterly increment eligibility (0 - 10k BDT).
+
+### Reporting Review
+- [ ] **Weekly Reports:** Read every submitted weekly report.
+- [ ] **Knowledge Audit:** Track missed submissions and audit the "Knowledge Share" quality.
+
+---
+
+## 2. Employee Self-Service (Responsive PWA)
+
+### Daily Operations (Mobile First)
+- [ ] **One-Tap Attendance:** Start/End work with a single tap.
+- [ ] **Location Selection:** Toggle between "On Office" and "Home Office".
+- [ ] **Real-time Tracker:** Visual timer showing work minutes, calculated daily overtime, and lateness logs.
+
+### Personal Workspace
+- [ ] **Notifications & Schedules:** 
+    - Dashboard showing today's Meetings (Internal & Client).
+    - "Join/Attend" confirmation system.
+    - List of assigned project tasks and approaching deadlines.
+- [ ] **Task Actions:** Change task status to "Done" and provide text-based "Valid Reasons" if late.
+
+### Submissions & Requests
+- [ ] **Weekly Work Report:** Mandatory form submission (summary, issues, next week's plan).
+- [ ] **Monthly Peer Review:** Rate all colleagues (1-10) with mandatory behavior instructions. Available on the 7th of every month.
+- [ ] **Leave Center:** Submit leave requests with date pickers and reason fields.
+
+### Transparency Dashboard
+- [ ] **Performance Breakdown:** View live KPI scores for all 9 categories.
+- [ ] **History & Stats:** Access personal attendance, lateness, and leave history.
+- [ ] **Financial Tracking:** View earned bonuses and increment status.
+- [ ] **Notices:** View official warnings and behavior penalty logs.
+
+---
+
+## 3. Automated System Logic (The KPI Engine)
+
+### Core Calculations
+- **KPI 1 (Attendance):** Auto-deduct for absences (Informed -1, Uninformed -2) and >3 approved leaves (-0.5).
+- **KPI 2 (Timeliness):** Auto-deduct for late minutes (0.25 per 30m uninformed). Auto-add overtime bonus (0.25 per 30m after 8 hours).
+- **KPI 3 & 4 (Meetings):** Automated scoring based on skip status (-1 Informed, -2/-6 Uninformed).
+- **KPI 5 (Peer Review):** Automated averaging of received peer ratings.
+- **KPI 6 (Deadlines):** Automated day-based penalty (0.5 per day late) unless waived by Admin.
+- **KPI 7 (Weekly Reports):** Penalties for late (-3) or missed (-6) submissions.
+
+### System Alerts
+- **Notification Engine:** 
+    - Thursday 2 PM: Weekly report reminder.
+    - 7th of Month: Peer review reminder.
+    - Automated "Late to Meeting" alerts.

@@ -1,0 +1,311 @@
+
+
+AUTOLINIUM
+Internal Office &amp; KPI Management System
+Product Requirements Document (PRD)
+1. System Overview
+This software will replace the current 
+Airtable
+-based system and become 
+Autolinium’s
+ 
+central internal platform
+ for employee management and KPI evaluation.
+The system will manage:
+• Attendance &amp; work hours tracking
+• Timeliness and overtime tracking
+• Internal &amp; client meeting tracking
+• Project deadlines and task completion
+• Weekly work reporting
+• Peer review &amp; 
+behaviour
+ scoring
+• Monthly KPI calculation
+• Bonus and increment eligibility
+• Employee self-service dashboard
+• CEO/Admin analytics dashboard
+Platforms
+• Web Admin Panel (Management)
+• Employee Mobile App (Android first, iOS later)
+2. Core User Roles
+2.1 Employee
+Employees can:
+• Daily check-in and check-out
+• Submit weekly work reports
+• Rate colleagues monthly (Peer Review)
+• View personal attendance and lateness history
+• View KPI breakdown and bonuses
+• View warnings and penalties
+• View assigned tasks and deadlines
+2.2 Admin / CEO
+Admins can:
+• Edit attendance and lateness status
+• Approve leaves and late requests
+• Create meetings and tasks
+• Assign 
+behaviour
+ penalties
+• Enter KPI 8 and KPI 9 scores
+• Send warnings to employees
+• View full analytics and reports
+• Generate monthly KPI reports
+3. Attendance System (KPI 1 + KPI 2) 
+3.1 Work Schedule 
+• Office days per month: 26 
+• Work hours per day: 11 AM – 7 PM 
+• Standard granted leave: 2 days/month (Upon Approval) 
+3.2 Daily Flow Morning Check-In 
+Employee opens app and presses 
+Start Work
+. And select 
+On Office
+ or 
+Home Office
+. 
+Record: 
+• date 
+• 
+entry_time
+ 
+Evening Check-Out Employee 
+presses
+ 
+End Work.
+ 
+Record: 
+• 
+exit_time
+ System calculations: 
+work_minutes
+ = 
+exit_time
+ − 
+entry_time
+ 
+3.3 Attendance Status Fields For each day: 
+Presence: 
+• Present 
+• Absent Absence info: 
+• Informed / Uninformed 
+• Granted / Not granted Late info: 
+• Timely / Late (Auto) 
+• Late informed / uninformed (Manual)
+• Late granted / not granted (Manual) 
+• Promise time (if informed late) (Manual) 
+4. KPI 1 — Attendance (10 pts) 
+Start score = 10 Penalties: Condition Deduction Granted leave &gt; 3 days (−0.5) 
+each
+ Uninformed absence (−2) each Informed but not granted absence (−1) each Score min = 0, max = 10.
+ 5. KPI 2 — Timeliness &amp; Overtime (10 pts) 
+Start score = 10 Uninformed 
+Late Every 30 minutes late → (−0.25)
+ Informed Late but arrive after promised time Every 10 minutes → (−0.25)
+ Granted Late First 4 days in a month no penalties. After that (from the fifth request of late arrival) → −0.5 per day 
+Overtime Bonus 
+After 8 work hours/day: Every 30 min → +0.25 
+Clamp score 0–10. 
+6. Internal Meetings (KPI 3 - 10 pts) (To be 
+filled
+ by Admin) 
+For all the meetings attended in a month, will 
+get
+ 10/10.
+ Fields: 
+• Meeting Name
+ • Meeting Date 
+• Agenda 
+• 
+employee_id
+ (select, who attended it)
+ • 
+informed_skip
+ (Select employee id)
+ • 
+uninformed_skip
+ (Select Employee id) 
+Scoring: 
+• Informed Skip meeting → −1 
+• Uninformed skip → −2 total 
+7. Client Meetings (KPI 4 — 10 pts) 
+Employees won’t see the 
+Admin’s
+ field. Give a Create a 
+Client
+ meeting Option. 
+Fields:
+ • Client’s name (Select from the client’s DB)
+ • Employee id (Select from the employee DB) 
+• 
+scheduled_time
+ 
+• 
+join_time
+ 
+• 
+behavior_penalty
+ (by admin) 
+• 
+informed_skip
+ (By admin) 
+• 
+uninformed_skip
+ (By Admin) Scoring: 
+• Every 5 min late → −0.5 
+• Informed absence → −3 
+• Uninformed absence → −6 
+• Behavior penalty → admin defined (0–10) 
+ 8. Peer Review (KPI 5 — 10 pts) Monthly process: 
+• On 7th of month, 
+notification
+ sent to each 
+members
+ of the 
+autolinium
+ including
+ admin to give marks to 
+all of
+ their colleagues. 
+• On the rating page, there must be the following instructions. Rate your colleagues based on 
+• If they have treated you respectfully or not. 
+• Do they help teammates when they face difficulties or not? 
+• If they maintain a positive attitude at the workplace or not.
+ • If they avoid unnecessary conflict or arguments or not. 
+• If they share knowledge and support others’ growth or not. Note: Accept the feedback you’ll receive professionally. 
+• Employees rate all colleagues (1–10) Score: Average rating received. Only 
+admin
+ will see the ratings that everyone provides. Employees will see the average rating only.
+ 
+9. Deadline KPI (KPI 6 — 10 pts)
+A Deadline Page will be available to each employee's interface. The source of this interface is the Projects Table. Here, all the deadlines of the assigned projects will be shown. Once the task is done, they will change the status (There will be 2 statuses. Generally
+,
+ it’s Pending, once the employee does 
+it
+ they will select Done.) If the task is done after the deadline, the penalties will be applied if they personally don’t provide a valid reason 
+to
+ the admin. Admin can change the ratings from their view. 
+Task fields: 
+• deadline 
+• 
+completed_date
+ 
+• 
+valid_reason
+ 
+• 
+informed_before_deadline
+ 
+If delay AND both flags 
+false
+: 
+fault_delay_days
+ = 
+completed_date
+ − deadline Penalty = 0.5 × days KPI6 = 10 − penalty 
+10. Weekly Report (KPI 7 — 10 pts) 
+Sent
+ a 
+lotification
+ every Thursday 2 PM Due Friday 2 PM There will be a form 
+similar to
+ Penalties:
+Action Deduction Late submission −3 
+Missed submission −6 
+Missing knowledge share −2 
+11. KPI 8 - Value Added (0–25 pts) 
+Employees page will be 
+view
+ only. Admin can edit. Admin manually enters the monthly score. Examples: 
+• Revenue contribution 
+• Client retention 
+• Efficiency improvements 
+12. KPI 9 — Innovation (0–5 pts) 
+Employees page will be 
+view
+ only. Admin enters score for: 
+• New ideas 
+• Process improvements 
+• Product ideas 
+• Automation innovations
+13. KPI Total Calculation
+KPI Total =
+KPI1+KPI2+KPI3+KPI4+KPI5+KPI6+KPI7+KPI8+KPI9
+Max Score = 100
+14. Bonus Calculation
+If KPI &gt; 75:
+Bonus = (KPI − 75) × 1000 BDT
+15. Increment Logic (Quarterly)
+Performance
+Result
+KPI &lt; 7
+5 
+once
+Max increment 4k
+KPI &lt; 75 twice
+Max increment 2k
+KPI &lt; 75 three months
+Termination
+KPI ≥ 75 for 3 months
+Eligible 0–10k
+16. Employee Mobile Dashboard
+Employees can view:
+• One-tap check-in / check-out
+• Attendance history &amp; stats
+• Monthly lateness &amp; leave summary
+• KPI breakdown by category
+• Earned bonus
+• Warnings &amp; notices
+• Weekly report submission
+• Peer review submission page
+17. Admin Dashboard (FULL SPEC)
+The Admin Panel is the 
+control center
+ of the company.
+17.1 Company Overview
+• Total employees
+• Average company KPI
+• Monthly bonus payout estimate
+• Attendance heatmap
+• Late ranking leaderboard
+17.2 Attendance Management
+Admin can:
+• Edit daily attendance records
+• Approve leaves
+• Approve late requests
+• Add manual attendance entries
+• View attendance analytics
+17.3 KPI Management
+Admin can:
+• View KPI per employee
+• View KPI per category
+• Enter KPI 8 &amp; KPI 9 scores
+• View low-performance alerts
+• Track employees below 75 KPI
+17.4 Meetings Manager
+Admin can:
+• Create internal meetings
+• Mark attendance
+• Review client meetings
+• Apply 
+behaviour
+ penalties
+17.5 Task &amp; Deadline Manager
+Admin can:
+• Create tasks and deadlines
+• Assign employees
+• Approve delay reasons
+• View late task analytics
+17.6 Weekly Reports
+Admin can:
+• Read all weekly reports
+• Track missed submissions
+• View knowledge-sharing logs
+17.7 Warning &amp; Discipline System
+Admin can:
+• Send warnings
+• Add manual penalties
+• View employee warning history
+17.8 Payroll Insights
+Admin sees:
+• Monthly bonus per employee
+• Increment eligibility alerts
+• Termination risk alerts

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autolinium App - Tech Stack Proposal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --bg: #f8fafc;
+            --text: #1e293b;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            line-height: 1.6; 
+            color: var(--text); 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 40px; 
+            display: flex; 
+            justify-content: center; 
+        }
+        .container { 
+            background: white; 
+            max-width: 800px; 
+            width: 100%; 
+            padding: 50px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+        }
+        .header { 
+            border-bottom: 2px solid #e2e8f0; 
+            margin-bottom: 30px; 
+            padding-bottom: 20px; 
+        }
+        h1 { color: var(--primary); font-size: 28px; margin: 0; }
+        .subtitle { color: var(--secondary); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .section { margin-bottom: 40px; }
+        h2 { font-size: 20px; color: #334155; border-left: 4px solid var(--primary); padding-left: 15px; margin-bottom: 20px; }
+        
+        .stack-item { display: flex; align-items: flex-start; margin-bottom: 20px; }
+        .icon { background: #dbeafe; color: var(--primary); padding: 10px; border-radius: 8px; margin-right: 15px; font-weight: bold; min-width: 40px; text-align: center; }
+        .details h3 { font-size: 16px; margin: 0; color: #1e293b; }
+        .details p { margin: 5px 0 0; color: #64748b; font-size: 14px; }
+
+        .strategy-box { background: #f1f5f9; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .strategy-box strong { color: var(--primary); }
+
+        .footer-note { margin-top: 50px; font-size: 12px; color: #94a3b8; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 20px; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; padding: 20px; }
+            .no-print { display: none; }
+        }
+
+        .no-print {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            font-size: 14px;
+            border: 1px solid #ffeeba;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="no-print">
+            <strong>Download Instruction:</strong> To save this as a <strong>PDF</strong>, press <code>Ctrl + P</code> (Print) and select <strong>"Save as PDF"</strong>.
+        </div>
+        
+        <div class="header">
+            <p class="subtitle">Internal Project Proposal</p>
+            <h1>Autolinium Office & KPI Management System</h1>
+        </div>
+
+        <div class="section">
+            <h2>Core Development Strategy</h2>
+            <div class="strategy-box">
+                <p>We are following a <strong>Single-Codebase Progressive Web App (PWA)</strong> strategy. This allows us to build one high-quality Responsive application that provides a full desktop experience for Admins and an APP-like "installed" experience for Employees on mobile devices, ensuring data consistency and faster development cycles.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Technical Stack</h2>
+            
+            <div class="stack-item">
+                <div class="icon">FE</div>
+                <div class="details">
+                    <h3>Frontend: Next.js (React Framework)</h3>
+                    <p>Utilizing React for dynamic UI and Next.js for high performance and server-side rendering. Styled with <strong>Tailwind CSS</strong> for a modern, responsive design system.</p>
+                </div>
+            </div>
+
+            <div class="stack-item">
+                <div class="icon">BE</div>
+                <div class="details">
+                    <h3>Backend: Node.js (Express)</h3>
+                    <p>A high-concurrency JavaScript runtime used to build a robust RESTful API that serves data to both desktop and mobile users simultaneously.</p>
+                </div>
+            </div>
+
+            <div class="stack-item">
+                <div class="icon">DB</div>
+                <div class="details">
+                    <h3>Database: PostgreSQL</h3>
+                    <p>An enterprise-grade relational database ensuring data integrity and allowing for complex queries required for KPI calculations and reporting.</p>
+                </div>
+            </div>
+
+            <div class="stack-item">
+                <div class="icon">ORM</div>
+                <div class="details">
+                    <h3>Data Layer: Prisma ORM</h3>
+                    <p>A modern Type-Safe ORM to manage database translations, ensuring fast development and fewer runtime errors in data handling.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Implementation Roadmap</h2>
+            <p style="font-size: 14px; color: #475569;">
+                1. Core API & Database Engine (Backend Core)<br>
+                2. Responsive Dashboard & KPI Engine (Admin Panel)<br>
+                3. Employee Self-Service Mobile View (PWA Features)<br>
+                4. Automated Analytics & Reporting
+            </p>
+        </div>
+
+        <div class="footer-note">
+            Prepared for Autolinium Management • Generated by Project Lead
+        </div>
+    </div>
+</body>
+</html>

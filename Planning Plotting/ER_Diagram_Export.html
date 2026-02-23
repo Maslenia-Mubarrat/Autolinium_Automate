@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autolinium ER Diagram Export</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({ startOnLoad: true });</script>
+    <style>
+        body { font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px; background: #f4f7f9; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 1000px; width: 100%; }
+        h1 { color: #2d3748; margin-bottom: 20px; }
+        .instructions { margin-bottom: 30px; padding: 15px; background: #ebf8ff; border-left: 4px solid #3182ce; color: #2c5282; border-radius: 4px; }
+        @media print { .instructions { display: none; } .card { box-shadow: none; width: 100%; border: none; } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Autolinium Database ER Diagram</h1>
+        <div class="instructions">
+            <strong>Download Guide:</strong> To save this as a <strong>PDF</strong>, press <code>Ctrl + P</code> (Print) on your keyboard and select <strong>"Save as PDF"</strong> as the destination.
+        </div>
+        <div class="mermaid">
+erDiagram
+    Users ||--o{ Attendance : "logs daily"
+    Users ||--o{ MonthlyKPI : "evaluated by"
+    Users ||--o{ PeerReview : "gives/receives"
+    Users ||--o{ ProjectTask : "assigned to"
+    Users ||--o{ InternalMeetingAttendee : "attends"
+    Users ||--o{ ClientMeetingAttendee : "attends"
+    Users ||--o{ WeeklyReport : "submits"
+    Users ||--o{ LeaveRequest : "requests"
+
+    InternalMeeting ||--o{ InternalMeetingAttendee : "has"
+    ClientMeeting ||--o{ ClientMeetingAttendee : "has"
+
+    Users {
+        int id PK
+        string name
+        string email
+        string role "ADMIN or EMPLOYEE"
+        float base_salary
+    }
+
+    Attendance {
+        int id PK
+        int user_id FK
+        date record_date
+        time entry_time
+        time exit_time
+        string presence_status "PRESENT, ABSENT"
+        string late_status "TIMELY, LATE_AUTO, LATE_INFORMED"
+        int work_minutes
+        int overtime_minutes
+    }
+
+    LeaveRequest {
+        int id PK
+        int user_id FK
+        date start_date
+        date end_date
+        string status "PENDING, APPROVED, REJECTED"
+    }
+
+    InternalMeeting {
+        int id PK
+        string name
+        date meeting_date
+        string agenda
+    }
+
+    InternalMeetingAttendee {
+        int meeting_id FK
+        int user_id FK
+        string status "ATTENDED, SKIP"
+    }
+
+    ProjectTask {
+        int id PK
+        string title
+        date deadline
+        string status "PENDING, DONE"
+    }
+
+    MonthlyKPI {
+        int id PK
+        int user_id FK
+        int month
+        int year
+        float total_score "0-100"
+        float bonus_earned
+    }
+        </div>
+    </div>
+</body>
+</html>
