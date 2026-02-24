@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autolinium - Comprehensive Feature Matrix</title>
+    <style>
+        :root {
+            --primary: #00A3FF;
+            --text: #1e293b;
+            --bg: #ffffff;
+            --slate: #f8fafc;
+            --border: #e2e8f0;
+        }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: var(--bg);
+        }
+        .header {
+            border-left: 6px solid var(--primary);
+            padding-left: 20px;
+            margin-bottom: 40px;
+        }
+        h1 { font-size: 2.2rem; margin: 0; color: #0f172a; text-transform: uppercase; font-weight: 800; }
+        h2 { font-size: 1.5rem; border-bottom: 2px solid var(--primary); display: inline-block; padding-bottom: 5px; margin-top: 40px; color: #0f172a; }
+        h3 { font-size: 1.1rem; color: var(--primary); margin-top: 25px; margin-bottom: 10px; font-weight: 700; text-transform: uppercase; }
+        .meta { color: #64748b; font-size: 0.9rem; margin-top: 5px; }
+        
+        .intro {
+            background: var(--slate);
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+
+        .category-block {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            background: #fff;
+        }
+
+        ul { list-style: none; padding-left: 5px; }
+        li { 
+            margin-bottom: 12px; 
+            padding-left: 30px; 
+            position: relative; 
+            font-size: 0.95rem;
+        }
+        li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 4px;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--primary);
+        }
+        
+        .sub-list {
+            padding-left: 20px;
+            margin-top: 8px;
+        }
+        .sub-list li {
+            font-size: 0.85rem;
+            color: #475569;
+            margin-bottom: 5px;
+        }
+        .sub-list li::before {
+            width: 8px;
+            height: 8px;
+            border-width: 1px;
+            top: 6px;
+        }
+
+        .logic-card {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 4px;
+            border-left: 6px solid var(--primary);
+            font-family: monospace;
+            margin-bottom: 20px;
+        }
+        .logic-title { color: var(--primary); font-weight: bold; margin-bottom: 10px; display: block; }
+
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+        }
+
+        @media print {
+            body { margin: 20px; padding: 0; }
+            h2 { page-break-before: always; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Comprehensive Feature Matrix</h1>
+        <div class="meta">Autolinium Platform Requirement Specification v1.0</div>
+    </div>
+
+    <div class="intro">
+        This document serves as the final checklist for all features required in the Autolinium Internal Office & KPI Management System, based on the Product Requirements Document (PRD).
+    </div>
+
+    <div class="section">
+        <h2>1. Admin/CEO Control Center</h2>
+        
+        <div class="category-block">
+            <h3>Attendance Oversight</h3>
+            <ul>
+                <li><strong>Daily Heatmap:</strong> Visual representation of office-wide attendance.</li>
+                <li><strong>Presence Monitoring:</strong> Real-time list of who is "On Office" vs "Home Office".</li>
+                <li><strong>Manual Override:</strong> Ability to edit any daily attendance or lateness record.</li>
+                <li><strong>Request Approval:</strong> Approve or Reject Leave and Late Arrival requests.</li>
+                <li><strong>Metadata Management:</strong> Manually add "Promise Time" and "Granted/Non-granted" status for late arrivals.</li>
+            </ul>
+
+            <h3>Meeting & Task Governance</h3>
+            <ul>
+                <li><strong>Internal Meetings:</strong>
+                    <ul class="sub-list">
+                        <li>Create meetings with Agenda and Date.</li>
+                        <li>Select attendees.</li>
+                        <li>Mark status: Attended, Informed Skip, or Uninformed Skip.</li>
+                    </ul>
+                </li>
+                <li><strong>Client Meetings:</strong>
+                    <ul class="sub-list">
+                        <li>Review logs of client meetings (Client name, scheduled vs join time).</li>
+                        <li>Apply manual behavior penalties (0-10 pts) based on performance.</li>
+                        <li>Mark Informed/Uninformed skips.</li>
+                    </ul>
+                </li>
+                <li><strong>Project Task Manager:</strong>
+                    <ul class="sub-list">
+                        <li>Create tasks with specific deadlines.</li>
+                        <li>Assign employees.</li>
+                        <li>Review "Valid Reasons" for delays and decide whether to waive penalties.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>KPI & Performance Engine</h3>
+            <ul>
+                <li><strong>Manual Data Entry:</strong> Enter monthly scores for KPI 8 (Value Added) and KPI 9 (Innovation).</li>
+                <li><strong>Disciplinary System:</strong>
+                    <ul class="sub-list">
+                        <li>Issue official Warnings.</li>
+                        <li>Add manual behavior penalties (deducted from KPI scores).</li>
+                        <li>View full warning/penalty history for any employee.</li>
+                    </ul>
+                </li>
+                <li><strong>Analytics & Alerts:</strong>
+                    <ul class="sub-list">
+                        <li>View KPI breakdown per category and per employee.</li>
+                        <li>Automatic alerts for low performance (KPI < 75).</li>
+                        <li>Track "Termination Risk" for employees failing to meet targets for 3 months.</li>
+                    </ul>
+                </li>
+                <li><strong>Payroll & Incentives:</strong>
+                    <ul class="sub-list">
+                        <li>View monthly bonus calculations ( (KPI - 75) * 1000 BDT ).</li>
+                        <li>Track quarterly increment eligibility (0 - 10k BDT).</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>Reporting Review</h3>
+            <ul>
+                <li><strong>Weekly Reports:</strong> Read every submitted weekly report.</li>
+                <li><strong>Knowledge Audit:</strong> Track missed submissions and audit the "Knowledge Share" quality.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>2. Employee Self-Service (Responsive PWA)</h2>
+        <div class="category-block">
+            <h3>Daily Operations (Mobile First)</h3>
+            <ul>
+                <li><strong>One-Tap Attendance:</strong> Start/End work with a single tap.</li>
+                <li><strong>Location Selection:</strong> Toggle between "On Office" and "Home Office".</li>
+                <li><strong>Real-time Tracker:</strong> Visual timer showing work minutes, calculated daily overtime, and lateness logs.</li>
+            </ul>
+
+            <h3>Personal Workspace</h3>
+            <ul>
+                <li><strong>Notifications & Schedules:</strong>
+                    <ul class="sub-list">
+                        <li>Dashboard showing today's Meetings (Internal & Client).</li>
+                        <li>"Join/Attend" confirmation system.</li>
+                        <li>List of assigned project tasks and approaching deadlines.</li>
+                    </ul>
+                </li>
+                <li><strong>Task Actions:</strong> Change task status to "Done" and provide text-based "Valid Reasons" if late.</li>
+            </ul>
+
+            <h3>Submissions & Requests</h3>
+            <ul>
+                <li><strong>Weekly Work Report:</strong> Mandatory form submission (summary, issues, next week's plan).</li>
+                <li><strong>Monthly Peer Review:</strong> Rate all colleagues (1-10) with mandatory behavior instructions.</li>
+                <li><strong>Leave Center:</strong> Submit leave requests with date pickers and reason fields.</li>
+            </ul>
+
+            <h3>Transparency Dashboard</h3>
+            <ul>
+                <li><strong>Performance Breakdown:</strong> View live KPI scores for all 9 categories.</li>
+                <li><strong>History & Stats:</strong> Access personal attendance, lateness, and leave history.</li>
+                <li><strong>Financial Tracking:</strong> View earned bonuses and increment status.</li>
+                <li><strong>Notices:</strong> View official warnings and behavior penalty logs.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>3. Automated System Logic (The KPI Engine)</h2>
+        <div class="category-block">
+            <div class="logic-card">
+                <span class="logic-title">[CORE_CALCULATIONS]</span>
+                <ul>
+                    <li><strong>KPI 1 (Attendance):</strong> Auto-deduct for absences (Informed -1, Uninformed -2) and >3 approved leaves (-0.5).</li>
+                    <li><strong>KPI 2 (Timeliness):</strong> Auto-deduct for late minutes (0.25 per 30m uninformed). Auto-add overtime bonus (0.25 per 30m after 8 hours).</li>
+                    <li><strong>KPI 3 & 4 (Meetings):</strong> Automated scoring based on skip status (-1 Informed, -2/-6 Uninformed).</li>
+                    <li><strong>KPI 5 (Peer Review):</strong> Automated averaging of received peer ratings.</li>
+                    <li><strong>KPI 6 (Deadlines):</strong> Automated day-based penalty (0.5 per day late) unless waived by Admin.</li>
+                    <li><strong>KPI 7 (Weekly Reports):</strong> Penalties for late (-3) or missed (-6) submissions.</li>
+                </ul>
+            </div>
+
+            <div class="logic-card">
+                <span class="logic-title">[SYSTEM_ALERTS]</span>
+                <ul>
+                    <li><strong>Weekly Report Reminder:</strong> Thursday 2 PM.</li>
+                    <li><strong>Peer Review Reminder:</strong> 7th of Every Month.</li>
+                    <li><strong>Automated Alerts:</strong> Real-time "Late to Meeting" and "Low Performance" notifications.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        CONFIDENTIAL - INTERNAL SPECIFICATION - © 2026 Autolinium
+    </div>
+</body>
+</html>
