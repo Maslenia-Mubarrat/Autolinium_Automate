@@ -46,22 +46,22 @@ const items = [
 
 export function AppSidebar() {
     return (
-        <Sidebar className="border-r-2 border-primary bg-white">
-            <SidebarHeader className="border-b-2 border-primary p-4">
-                <div className="flex items-center gap-2">
+        <Sidebar className="sidebar-root border-r-2 border-primary bg-white">
+            <SidebarHeader className="sidebar-header-section border-b-2 border-primary p-4">
+                <div className="logo-container flex items-center gap-2">
                     <div className="h-8 w-8 bg-primary rounded-none flex items-center justify-center">
                         <span className="text-white font-black text-xl font-mono">  A</span>
                     </div>
                     <span className="font-black text-lg tracking-tighter text-primary
-                font-mono whitespace-nowrap uppercase">
+                     font-mono whitespace-nowrap uppercase">
                         Autolinium
                     </span>
                 </div>
             </SidebarHeader>
-            <SidebarContent>
-                <SidebarGroup>
-                    <SidebarGroupLabel className="text - [10px] uppercase font-bold text-slate-400
-                font-mono">System_Console
+            <SidebarContent className="sidebar-main-content">
+                <SidebarGroup className="nav-group">
+                    <SidebarGroupLabel className="nav-label text-[10px] uppercase font-bold text-slate-400 font-mono">
+                        System_Console
                     </SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
@@ -88,8 +88,8 @@ export function AppSidebar() {
                 </SidebarGroup>
             </SidebarContent>
 
-            <SidebarFooter className="border-t-2 border-primary p-4 text-slate-400">
-                <span className="font-mono text-[10px] upprcase font-bold tracking-tighter">
+            <SidebarFooter className="sidebar-footer-info border-t-2 border-primary p-4 text-slate-400">
+                <span className="version-tag font-mono text-[10px] upprcase font-bold tracking-tighter">
                     Ver_1.0// Auth_Ready
                 </span>
             </SidebarFooter>

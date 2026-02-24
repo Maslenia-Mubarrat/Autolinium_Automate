@@ -12,7 +12,7 @@ const navItems = [
 
 export function MobileNav() {
     return (
-        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t-4 border-primary grid grid-cols-5 items-center px-2 z-50">
+        <nav className="mobile-nav-root fixed bottom-0 left-0 right-0 h-16 bg-white border-t-4 border-primary grid grid-cols-5 items-center px-2 z-50">
             {navItems.map((item) => (
                 <a
                     key={item.label}
