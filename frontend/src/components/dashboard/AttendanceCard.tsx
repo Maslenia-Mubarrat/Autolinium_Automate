@@ -69,7 +69,7 @@ export function AttendanceCard() {
                         <div className="warning-banner border border-destructive/30 bg-destructive/5 p-3 flex items-center gap-3 w-full">
                             <AlertCircle className="warning-icon text-destructive w-5 h-5 flex-shrink-0" />
                             <p className="warning-message text-[11px] font-mono leading-tight text-destructive uppercase font-bold">
-                                Warning: Current time exceeds 09:00 AM limit. Points deduction active.
+                                Warning: Current time exceeds 11:00 AM limit. Points deduction active.
                             </p>
                         </div>
                     )}
