@@ -23,10 +23,10 @@ export function AttendanceCard() {
 
     const hours = time.getHours()
     const minutes = time.getMinutes()
-    const isPastNine = hours > 9 || (hours === 9 && minutes > 0)
+    const isPastEleven = hours > 11 || (hours === 11 && minutes > 0)
 
     const handleCheckIn = () => {
-        setStatus(isPastNine ? "late" : "present")
+        setStatus(isPastEleven ? "late" : "present")
         console.log("Check-in triggered at:", time.toLocaleTimeString())
     }
 
@@ -65,7 +65,7 @@ export function AttendanceCard() {
                         </h2>
                     </div>
 
-                    {isPastNine && status === "idle" && (
+                    {isPastEleven && status === "idle" && (
                         <div className="warning-banner border border-destructive/30 bg-destructive/5 p-3 flex items-center gap-3 w-full">
                             <AlertCircle className="warning-icon text-destructive w-5 h-5 flex-shrink-0" />
                             <p className="warning-message text-[11px] font-mono leading-tight text-destructive uppercase font-bold">

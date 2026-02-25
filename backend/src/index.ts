@@ -32,6 +32,43 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
+
+// 3. New Attendance Check-In Route
+app.post('/api/attendance/check-in', async (req, res) => {
+    // For now, we manually use userId: 1 (Until we build Login)
+    const { userId = 1 } = req.body;
+    const now = new Date();
+
+    try {
+        // Business Logic: Is it past 9:00 AM?
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const isLate = hours > 11 || (hours === 11 && minutes > 0);
+
+        const record = await prisma.attendance.create({
+            data: {
+                userId: userId,
+                recordDate: now,
+                entryTime: now,
+                presenceStatus: 'PRESENT',
+                lateStatus: isLate ? 'LATE_AUTO' : 'TIMELY',
+            }
+        });
+
+        res.status(201).json({
+            message: 'Check-in successful',
+            data: record
+        });
+    } catch (error) {
+        console.error("Check-in Error:", error);
+        res.status(500).json({ error: 'Failed to log attendance' });
+    }
+});
+
+
+
+
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
