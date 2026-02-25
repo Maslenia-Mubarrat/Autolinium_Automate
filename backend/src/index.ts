@@ -35,23 +35,27 @@ app.get('/api/users', async (req, res) => {
 
 // 3. New Attendance Check-In Route
 app.post('/api/attendance/check-in', async (req, res) => {
-    // For now, we manually use userId: 1 (Until we build Login)
+    console.log("📣 Backend: Received Check-In request", req.body);
     const { userId = 1 } = req.body;
+
+    // Use local office date (YYYY-MM-DD) for consistency
     const now = new Date();
+    const options: any = { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' };
+    const formatter = new Intl.DateTimeFormat('en-CA', options);
+    const localDate = new Date(formatter.format(now));
 
     try {
-        // Business Logic: Is it past 9:00 AM?
         const hours = now.getHours();
         const minutes = now.getMinutes();
-        const isLate = hours > 11 || (hours === 11 && minutes > 0);
+        const isPastEleven = hours > 11 || (hours === 11 && minutes > 0);
 
         const record = await prisma.attendance.create({
             data: {
                 userId: userId,
-                recordDate: now,
+                recordDate: localDate, // Storing the local calendar day
                 entryTime: now,
                 presenceStatus: 'PRESENT',
-                lateStatus: isLate ? 'LATE_AUTO' : 'TIMELY',
+                lateStatus: isPastEleven ? 'LATE_AUTO' : 'TIMELY',
             }
         });
 
@@ -64,6 +68,36 @@ app.post('/api/attendance/check-in', async (req, res) => {
         res.status(500).json({ error: 'Failed to log attendance' });
     }
 });
+
+
+// 4. Get Today's Attendance Status (Multi-timezone safe)
+app.get('/api/attendance/status/:userId', async (req, res) => {
+    const { userId } = req.params;
+
+    // 💡 THE FIX: Force the computer to use Bangladesh's calendar date
+    const now = new Date();
+    const options: any = { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' };
+    const formatter = new Intl.DateTimeFormat('en-CA', options);
+    const localToday = new Date(formatter.format(now));
+
+    try {
+        const attendance = await prisma.attendance.findFirst({
+            where: {
+                userId: parseInt(userId),
+                recordDate: localToday
+            }
+        });
+
+        res.status(200).json({
+            checkedIn: !!attendance,
+            data: attendance
+        });
+    } catch (error) {
+        console.error("Status Check Error:", error);
+        res.status(500).json({ error: 'Failed to fetch status' });
+    }
+});
+
 
 
 

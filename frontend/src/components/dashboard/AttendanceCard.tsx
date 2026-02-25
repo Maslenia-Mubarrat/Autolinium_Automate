@@ -9,7 +9,8 @@ import { Clock, Fingerprint, AlertCircle } from "lucide-react"
 export function AttendanceCard() {
     // 1. Reactive State: The 'time' state triggers a re-render every second
     const [time, setTime] = useState(new Date())
-    const [status, setStatus] = useState<"idle" | "present" | "late">("idle")
+    const [status, setStatus] = useState<"syncing" | "idle" | "present" | "late">("syncing")
+    const [isLoading, setIsLoading] = useState(false);
 
     // 2. Side-Effect: Creating a 1000ms heartbeat
     useEffect(() => {
@@ -21,14 +22,77 @@ export function AttendanceCard() {
         return () => clearInterval(timer)
     }, [])
 
+    //checking the database on page load - recall logic
+    useEffect(() => {
+        const checkStatus = async () => {
+            try {
+                //asking the machine if we already checked in
+                const response = await fetch('http://localhost:5000/api/attendance/status/1');
+                const result = await response.json();
+
+                if (result.checkedIn) {
+                    const entryTime = new Date(result.data.entryTime);
+                    const hours = entryTime.getHours();
+                    const isLate = hours > 11 || (hours === 11 && entryTime.getMinutes() > 0);
+
+                    setStatus(isLate ? "late" : "present");
+
+                } else {
+                    setStatus("idle");
+                }
+
+            }
+            catch (error) {
+                console.error("failed to sync attendacne status:", error);
+                setStatus("idle");
+
+            }
+
+
+        };
+        checkStatus();
+    }, []);
+
+
+
     const hours = time.getHours()
     const minutes = time.getMinutes()
     const isPastEleven = hours > 11 || (hours === 11 && minutes > 0)
 
-    const handleCheckIn = () => {
-        setStatus(isPastEleven ? "late" : "present")
-        console.log("Check-in triggered at:", time.toLocaleTimeString())
-    }
+
+
+    //handle the button click
+    const handleCheckIn = async () => {
+        console.log("🚀 Frontend: Initiate_Check_In clicked");
+        setIsLoading(true);
+        try {
+
+            const response = await
+                fetch('http://localhost:5000/api/attendance/check-in',
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: 1 })
+                    }
+
+                );
+            if (response.ok) {
+                setStatus(isPastEleven ? "late" : "present");
+                console.log("✅ Success: Attendance logged in database");
+            }
+            else {
+                console.error("server error: failed to log attendance");
+            }
+
+        }
+        catch (error) {
+            console.error("Network error: is the backend running?", error);
+        }
+        finally {
+            setIsLoading(false);
+        }
+
+    };
 
     return (
         <Card className="attendance-card-root border-2 
@@ -76,11 +140,12 @@ export function AttendanceCard() {
 
                     <Button
                         onClick={handleCheckIn}
-                        disabled={status !== "idle"}
+                        disabled={isLoading || status !== "idle"}
                         className={`action-button-main w-full h-14 rounded-none font-black text-lg uppercase font-mono tracking-tight transition-all
                             ${status === "idle" ? 'hover:bg-primary/90' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}
                     >
-                        {status === "idle" ? "Initiate_Check_In" : "Check_In_Logged"}
+                        {status === "syncing" ? "Syncing_Status..." : (isLoading ? "Processing..." : status === "idle" ? "Initiate_Check_In" : "Checked_In")}
+
                     </Button>
 
                     <div className="footer-meta text-[9px] text-slate-400 font-mono uppercase font-bold tracking-tighter">

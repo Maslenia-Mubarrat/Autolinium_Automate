@@ -49,6 +49,7 @@ enum TaskStatus {
 
 model User {
   id                       Int                       @id @default(autoincrement())
+  employeeId               String                    @unique
   name                     String
   email                    String                    @unique
   passwordHash             String
