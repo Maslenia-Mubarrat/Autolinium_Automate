@@ -14,6 +14,7 @@ async function main() {
         where: { email: 'maslenia.csecu@gmail.com' },
         update: {},
         create: {
+            employeeId: 'ADMIN-001',
 
             email: 'maslenia.csecu@gmail.com',
             name: 'System Admin',

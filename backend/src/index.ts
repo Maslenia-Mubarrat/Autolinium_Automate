@@ -34,40 +34,44 @@ app.get('/api/users', async (req, res) => {
 
 
 // 3. New Attendance Check-In Route
-app.post('/api/attendance/check-in', async (req, res) => {
-    console.log("📣 Backend: Received Check-In request", req.body);
-    const { userId = 1 } = req.body;
+/*
+app.post('/api/attendance/check-out', async(req, res) =>
+{
+    const {userId = 1} = req.body;
 
-    // Use local office date (YYYY-MM-DD) for consistency
+    //getting creent date in dhaka
     const now = new Date();
-    const options: any = { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' };
-    const formatter = new Intl.DateTimeFormat('en-CA', options);
-    const localDate = new Date(formatter.format(now));
-
-    try {
-        const hours = now.getHours();
-        const minutes = now.getMinutes();
-        const isPastEleven = hours > 11 || (hours === 11 && minutes > 0);
-
-        const record = await prisma.attendance.create({
-            data: {
-                userId: userId,
-                recordDate: localDate, // Storing the local calendar day
-                entryTime: now,
-                presenceStatus: 'PRESENT',
-                lateStatus: isPastEleven ? 'LATE_AUTO' : 'TIMELY',
+    const options: any = {timeZone:'Asia/Dhaka',
+                          year: 'numeric',
+                          month: '2-digit',
+                          day:'2-digit'
+                         };
+    const formatter = new Intl.DateTimeFormat('en-CA',options);
+    const localToday = new Date(formatter.format(now));
+    
+    try{
+        const record = await prisma.attendance.findFirst({
+            where: {userId: userId,
+                    recordDate: localToday
             }
         });
+        if(!record || !record.entryTime)
+        {
+            return res.status(404).json({error:'No active check-in found'});
+        }
+        //work duration calculation
+        const entryTime = new Date(record.entryTime);
+        const diffMs = now.getTime() - entryTime.getTime();
+        const workMinutes = Math.floor(diffMs/(1000*60));
 
-        res.status(201).json({
-            message: 'Check-in successful',
-            data: record
-        });
-    } catch (error) {
-        console.error("Check-in Error:", error);
-        res.status(500).json({ error: 'Failed to log attendance' });
+        //overtime calculation
+        const overtimeMinutes = Math.max(0,workMinutes-480);
+        const updated = await
+        
     }
+    catch(error){}
 });
+*/
 
 
 // 4. Get Today's Attendance Status (Multi-timezone safe)
@@ -239,7 +243,101 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
 
 });
 
+// 1. Fetching all the tasks
+app.get('/api/tasks', async (req, res) => {
+    try {
+        const tasks = await prisma.task.findMany({ // Use 'task' (Lowercase)
+            include: {
+                assignee: { // Relationship name is 'assignee' for the Task model
+                    select: { name: true, employeeId: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.status(200).json(tasks);
+    } catch (error) {
+        console.error("failed", error);
+        res.status(500).json({ error: "failed to fetch task" });
+    }
+});
 
+// 2. Updating task status
+app.patch('/api/tasks/:id/status', async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    try {
+        const updatedTask = await prisma.task.update({ // Use 'task' (Lowercase)
+            where: { id: parseInt(id) },
+            data: { status } // Use 'data' (not date)
+        });
+        res.status(200).json(updatedTask);
+    } catch (error) {
+        console.error("failed", error);
+        res.status(500).json({ error: 'failed to update' });
+    }
+});
+//creating a new task
+app.post('/api/tasks', async (req, res) => {
+    const { title, description, assigneeId } = req.body;
+    try {
+        const newTask = await prisma.task.create({
+            data: {
+                title: title,
+                description: description,
+                assigneeId: parseInt(assigneeId)
+            }
+
+        });
+        res.status(201).json(newTask);
+
+    }
+    catch (error) {
+        console.error("Failed to create  task:", error);
+        res.status(500).json({ error: 'Failed to create task' });
+
+    }
+});
+
+//check out route ()
+/*
+app.post('/api/attendance/check-out', async (req, res) => {
+    const { userId = 1 } = req.body;
+
+    //getting creent date in dhaka
+    const now = new Date();
+    const options: any = {
+        timeZone: 'Asia/Dhaka',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    };
+    const formatter = new Intl.DateTimeFormat('en-CA', options);
+    const localToday = new Date(formatter.format(now));
+
+    try {
+        const record = await prisma.attendance.findFirst({
+            where: {
+                userId: userId,
+                recordDate: localToday
+            }
+        });
+        if (!record || !record.entryTime) {
+            return res.status(404).json({ error: 'No active check-in found' });
+        }
+        //work duration calculation
+        const entryTime = new Date(record.entryTime);
+        const diffMs = now.getTime() - entryTime.getTime();
+        const workMinutes = Math.floor(diffMs / (1000 * 60));
+
+        //overtime calculation
+        const overtimeMinutes = Math.max(0, workMinutes - 480);
+        const updated = await
+        
+    }
+    catch (error) { }
+});
+*/
 
 
 

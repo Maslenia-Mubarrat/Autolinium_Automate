@@ -1,5 +1,6 @@
 import { AttendanceCard } from "@/components/dashboard/AttendanceCard";
 import { KpiCard } from "@/components/dashboard/KpiCard";
+import { TaskBoard } from "@/components/dashboard/TaskBoard";
 export default function Home() {
   return (
     <div className="dashboard-root-container">
@@ -16,9 +17,10 @@ export default function Home() {
       {/* 2. The Grid System (Responsive Layout) */}
       <div className="dashboard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        {/* OUR NEW ATTENDANCE CARD */}
+        {/* Finished Components */}
         <AttendanceCard />
         <KpiCard />
+        <TaskBoard />
 
         {/* Empty Slots for Tomorrow (Day 3 & 4) */}
         <div className="placeholder-slot border-2 border-dashed border-slate-200 h-[350px] flex flex-col items-center justify-center p-6 bg-slate-50/50">

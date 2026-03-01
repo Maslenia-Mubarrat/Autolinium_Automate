@@ -66,6 +66,7 @@ model User {
   monthlyKPIs              MonthlyKPI[]
   reviewsGiven             PeerReview[]              @relation("ReviewsGiven")
   reviewsReceived          PeerReview[]              @relation("ReviewsReceived")
+  tasks                    Task[]
 }
 
 model Attendance {
@@ -191,4 +192,17 @@ model MonthlyKPI {
   kpi9Innovation       Float @default(0)
   totalScore           Float @default(0)
   bonusEarned          Float @default(0)
+}
+
+// --- THE TASK BOARD MODEL ---
+model Task {
+  id          Int      @id @default(autoincrement())
+  title       String   
+  description String?  // The ? means this field is optional
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, DONE
+  createdAt   DateTime @default(now())
+
+  // Relations: This assigns a task to a specific User
+  assigneeId  Int
+  assignee    User     @relation(fields: [assigneeId], references: [id])
 }
