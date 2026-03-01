@@ -1,0 +1,1167 @@
+# Autolinium — Word-for-Word Code Explanation
+**Every line. Every word. Every symbol. Nothing skipped.**
+
+---
+
+# FILE 1: [backend/prisma/schema.prisma](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/prisma/schema.prisma)
+
+This file is the **single source of truth for your database structure**. Prisma reads this file and either creates database tables or validates your code against them. You never edit the database directly — you edit this file, then run `npx prisma db push` to apply the changes.
+
+---
+
+## Block 1: The Generator
+
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+```
+
+**`generator`** — This keyword tells Prisma: *"I want you to generate something for me."* Prisma can generate different types of outputs. We're telling it to generate a **client** — a code library.
+
+**`client`** — This is just a name we're giving to this generator block. We called it `client` because it generates the Prisma Client. You could technically call it anything, but `client` is the convention everybody uses.
+
+**`{`** and **`}`** — These curly braces wrap the settings that belong to this `generator` block. Everything inside the braces is configuration for this specific generator.
+
+**`provider`** — This is a setting (also called a "property" or "key"). It tells Prisma *which kind of generator to use*.
+
+**`=`** — Assignment. Sets the value of `provider`.
+
+**`"prisma-client-js"`** — The value. This specific provider tells Prisma to generate a **JavaScript/TypeScript client library**. The library gets created inside `node_modules/@prisma/client`. This is what lets you write things like `prisma.user.findMany()` in your TypeScript code. Without this generator, there's no `prisma.user` — it simply wouldn't exist.
+
+> **In plain English:** "Generate a JavaScript/TypeScript library so I can talk to my database using code."
+
+---
+
+## Block 2: The Datasource
+
+```prisma
+datasource db {
+  provider = "postgresql"
+}
+```
+
+**`datasource`** — This keyword tells Prisma *what database system you are connecting to*. Your app needs to know if it's talking to PostgreSQL, MySQL, SQLite, MongoDB, etc. — they all speak slightly different SQL dialects.
+
+**`db`** — Again, just a name for this block. Everyone calls it `db` by convention.
+
+**`provider = "postgresql"`** — We're using PostgreSQL. This tells Prisma to use PostgreSQL-compatible SQL syntax when it generates queries.
+
+> **Notice:** There's no `url = "..."` here. Normally you'd see `url = env("DATABASE_URL")`. We removed it because we're using the `pg.Pool` adapter in [index.ts](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/src/index.ts) to handle the connection directly. The connection string is provided through code, not through this config file.
+
+---
+
+## Block 3: Enums
+
+An **enum** (short for "enumeration") is a fixed list of allowed values. It's a way of saying to the database: *"This column can ONLY contain one of these exact values — nothing else."*
+
+### `enum Role`
+```prisma
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+```
+
+**`enum`** — The keyword that declares an enumeration type.
+
+**`Role`** — The name of this enum. We can now use `Role` as a data type anywhere in our models, just like we use `String`, `Int`, or `Boolean`.
+
+**`ADMIN`** — One allowed value. By convention, enum values are written in UPPERCASE.
+
+**`EMPLOYEE`** — Another allowed value. That's it — only these two. If you try to save the string `"MANAGER"` into a field typed as `Role`, the database will throw an error and reject it.
+
+---
+
+### `enum PresenceStatus`
+```prisma
+enum PresenceStatus {
+  PRESENT
+  ABSENT
+}
+```
+Was the person there or not? Only two possible answers.
+
+---
+
+### `enum AbsenceInfo`
+```prisma
+enum AbsenceInfo {
+  INFORMED
+  UNINFORMED
+  GRANTED
+  NOT_GRANTED
+}
+```
+If someone is absent, *how* absent are they? Did they tell someone (`INFORMED`)? Did they just not show up (`UNINFORMED`)? Was their absence officially approved (`GRANTED`)? Or denied but they stayed home anyway (`NOT_GRANTED`)? This matters for KPI deductions — informed absence = -1 point, uninformed = -2 points.
+
+---
+
+### `enum LateStatus`
+```prisma
+enum LateStatus {
+  TIMELY
+  LATE_AUTO
+  LATE_INFORMED
+  LATE_UNINFORMED
+}
+```
+
+**`TIMELY`** — Arrived before or at 11:00 AM. No deduction.
+
+**`LATE_AUTO`** — The system automatically flagged them as late based on the check-in time. They didn't communicate anything. This is what gets assigned when the backend detects `hours > 11`.
+
+**`LATE_INFORMED`** — They were late but told someone (e.g., sent a message saying "I'll be 30 minutes late"). Smaller KPI penalty.
+
+**`LATE_UNINFORMED`** — Just showed up late without any word. Bigger KPI penalty.
+
+---
+
+### `enum LeaveStatus`, `enum MeetingStatus`, `enum TaskStatus`
+```prisma
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MeetingStatus {
+  ATTENDED
+  INFORMED_SKIP
+  UNINFORMED_SKIP
+}
+
+enum TaskStatus {
+  PENDING
+  DONE
+}
+```
+These are self-explanatory and follow the same pattern — fixed allowed values that enforce data integrity.
+
+---
+
+## Block 4: The `User` Model
+
+```prisma
+model User {
+```
+
+**`model`** — This keyword declares a database table. When you run `prisma db push`, Prisma creates an actual table in PostgreSQL called `User` with all the columns you define inside the curly braces.
+
+**`User`** — The name of the model (and the table in the database). By convention, model names are singular and PascalCase.
+
+```prisma
+  id Int @id @default(autoincrement())
+```
+
+**[id](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/components/layout/AppSidebar.tsx#47-103)** — The column name. This will be an actual column called [id](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/components/layout/AppSidebar.tsx#47-103) in your database table.
+
+**`Int`** — The data type. This column stores whole numbers (integers). No decimals.
+
+**`@id`** — A **Prisma attribute** (always starts with `@`). This marks [id](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/components/layout/AppSidebar.tsx#47-103) as the **Primary Key** — the unique identifier for every row. No two users can ever have the same [id](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/components/layout/AppSidebar.tsx#47-103). Every table needs exactly one `@id`.
+
+**`@default(autoincrement())`** — Another attribute. **`@default`** means "if no value is provided when creating a record, use this value automatically." **`autoincrement()`** means the database itself assigns the number — 1 for the first user, 2 for the second, 3 for the third, etc. You never have to set this manually.
+
+```prisma
+  employeeId String @unique
+```
+
+**`employeeId`** — Column name. Stores the ALM-XXX codes like "ALM-001".
+
+**`String`** — Data type. Text. Can be any length, any characters.
+
+**`@unique`** — Attribute that enforces uniqueness across all rows. Two employees cannot have the same `employeeId`. If you try, the database rejects the insert.
+
+```prisma
+  name     String
+  email    String @unique
+  passwordHash String
+```
+
+**`name`** and **`email`** — Plain text columns. `email` is `@unique` because two people cannot share an email account.
+
+**`passwordHash`** — We never store the actual password. We store a **hash** — a scrambled, one-way version of the password. Even if someone steals your database, they can't reverse a hash back to the original password. (The actual hashing logic isn't built yet — right now it stores "admin" and "placeholder_password" temporarily.)
+
+```prisma
+  role Role @default(EMPLOYEE)
+```
+
+**`role`** — Column name.
+
+**`Role`** — The data type is our enum `Role`. It can only be `ADMIN` or `EMPLOYEE`.
+
+**`@default(EMPLOYEE)`** — If you create a new user and don't specify a role, they are automatically an `EMPLOYEE`. This is a safety default — you have to explicitly set `ADMIN`, you can't accidentally make someone an admin.
+
+```prisma
+  baseSalary Float @default(0)
+```
+
+**`Float`** — Data type for decimal numbers (e.g., 25000.50). Used for salary.
+
+**`@default(0)`** — Starts at 0 if not specified.
+
+```prisma
+  createdAt DateTime @default(now())
+```
+
+**`DateTime`** — Stores a full timestamp: date + time.
+
+**`@default(now())`** — Automatically records the exact moment the user was created. You never set this yourself — it's automatic.
+
+```prisma
+  attendances              Attendance[]
+  leaveRequests            LeaveRequest[]
+  assignedTasks            ProjectTask[]             @relation("AssignedTasks")
+  internalMeetingsAttended InternalMeetingAttendee[]
+  clientMeetingsAttended   ClientMeetingAttendee[]
+  weeklyReports            WeeklyReport[]
+  monthlyKPIs              MonthlyKPI[]
+  reviewsGiven             PeerReview[]              @relation("ReviewsGiven")
+  reviewsReceived          PeerReview[]              @relation("ReviewsReceived")
+```
+
+These are **relation fields** — they don't create columns. They exist only in Prisma's understanding and let you write queries like `prisma.user.findMany({ include: { attendances: true } })`.
+
+**`Attendance[]`** — The `[]` means "a list of." This says: "A User can have many Attendance records." This is a **one-to-many relationship** — one user, many attendance days.
+
+**`@relation("AssignedTasks")`** — When a model has two different relationships to the same other model (like `PeerReview` — you both give reviews and receive reviews), Prisma needs a name to tell them apart. The string `"AssignedTasks"` is like a label that links the two sides together.
+
+---
+
+## Block 5: The [Attendance](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/components/dashboard/AttendanceCard.tsx#9-159) Model
+
+```prisma
+model Attendance {
+  id             Int            @id @default(autoincrement())
+  user           User           @relation(fields: [userId], references: [id])
+  userId         Int
+```
+
+**`user`** — A relation field. Gives you access to the full `User` object this attendance record belongs to.
+
+**`User`** — The type of the relation — it points to the `User` model.
+
+**`@relation(fields: [userId], references: [id])`** — This is where the actual database link is defined.
+- **`fields: [userId]`** — "The column in THIS table ([Attendance](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/components/dashboard/AttendanceCard.tsx#9-159)) that stores the link..."
+- **`references: [id]`** — "...links to the [id](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/components/layout/AppSidebar.tsx#47-103) column in the OTHER table (`User`)."
+- So `Attendance.userId = 5` means this record belongs to the User with `id = 5`.
+
+**`userId Int`** — This is the actual column stored in the database. A plain integer that holds the User's ID number. The `user` field above is just a virtual helper — `userId` is the real foreign key column.
+
+```prisma
+  recordDate      DateTime       @db.Date
+```
+
+**`DateTime`** — Normally stores date + time.
+
+**`@db.Date`** — A **native database type modifier**. This overrides and tells PostgreSQL to store ONLY the date part (YYYY-MM-DD), no time. This is critical for attendance — we only care if it was February 27th, not whether it was 11:03 AM or 11:04 AM. (The time is stored separately in `entryTime`.)
+
+```prisma
+  entryTime       DateTime?
+  exitTime        DateTime?
+```
+
+**`?`** — The question mark makes a field **optional (nullable)**. These can be `null` (empty/absent). Why? Because when you first create a check-in record, you have no `exitTime` yet — the person is still in the office! The `?` allows null.
+
+```prisma
+  presenceStatus  PresenceStatus @default(PRESENT)
+  absenceInfo     AbsenceInfo?
+  lateStatus      LateStatus     @default(TIMELY)
+  promiseTime     DateTime?
+  workMinutes     Int            @default(0)
+  overtimeMinutes Int            @default(0)
+  adminOverride   Boolean        @default(false)
+```
+
+**`Boolean`** — A true/false value. `adminOverride` tracks whether an Admin manually edited this record (to protect it from being overwritten by automated logic).
+
+**`absenceInfo AbsenceInfo?`** — Optional because if someone IS present, this column has no meaning and stays null.
+
+---
+
+## Block 6: Remaining Models
+
+The other models (`LeaveRequest`, `InternalMeeting`, `ClientMeeting`, `PeerReview`, `ProjectTask`, `WeeklyReport`, `MonthlyKPI`) all follow the exact same patterns as above — `@id`, `@default`, `@relation`, `?` for optional fields, enums for controlled values. Rather than repeat the same explanations, focus on the `MonthlyKPI` model since it's the center of the business logic:
+
+```prisma
+model MonthlyKPI {
+  id     Int  @id @default(autoincrement())
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+  month  Int
+  year   Int
+  kpi1Attendance       Float @default(10)
+  kpi2Timeliness       Float @default(10)
+  kpi3InternalMeetings Float @default(10)
+  kpi4ClientMeetings   Float @default(10)
+  kpi5PeerReview       Float @default(10)
+  kpi6Deadlines        Float @default(10)
+  kpi7WeeklyReport     Float @default(10)
+  kpi8ValueAdded       Float @default(0)
+  kpi9Innovation       Float @default(0)
+  totalScore           Float @default(0)
+  bonusEarned          Float @default(0)
+}
+```
+
+**`@default(10)`** — KPIs 1–7 start at 10 (full score) and get deductions applied. KPIs 8–9 start at 0 because they're manually entered by the Admin — you earn them, not lose them.
+
+**`totalScore`** — Sum of all 9 KPIs. The bonus formula is: [(totalScore - 75) × 1000 BDT](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/prisma/seed.ts#10-29).
+
+---
+
+# FILE 2: [backend/prisma/seed.ts](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/prisma/seed.ts)
+
+This is a **one-time setup script**. Run it once to populate your database with the Admin account. Running it multiple times is safe because of `upsert`.
+
+```typescript
+import "dotenv/config";
+```
+
+**`import`** — The ES module keyword for bringing in external code.
+
+**`"dotenv/config"`** — This specific import automatically calls `dotenv.config()` the moment it's imported. It reads your [.env](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/.env) file and loads all the variables (like `DATABASE_URL`) into `process.env`. You MUST import this before anything else that needs environment variables — order matters.
+
+```typescript
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
+```
+
+**`{ PrismaClient }`** — Named import. We're grabbing the specific export called `PrismaClient` from the `@prisma/client` package (the generated library from our schema).
+
+**`{ PrismaPg }`** — The adapter that bridges Prisma to a `pg.Pool` connection. Without this, Prisma wouldn't know how to use our PostgreSQL connection pool.
+
+**`pg from "pg"`** — Default import of the `pg` (node-postgres) package. This is the low-level PostgreSQL driver that actually opens connections. `PrismaClient` sits on top of it.
+
+```typescript
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+```
+
+**`const`** — Declares a constant variable. Once set, `pool` will always point to this same Pool object.
+
+**`new pg.Pool(...)`** — Creates a **connection pool**. A pool is a collection of pre-opened database connections waiting to be used. Instead of opening and closing a new connection for every single request (slow), the pool keeps connections alive and reuses them (fast).
+
+**`{ connectionString: process.env.DATABASE_URL }`** — An object with one property. `process.env` is a Node.js global that holds all environment variables. `DATABASE_URL` is the name of our variable in [.env](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/.env). Its value looks like: `postgresql://username:password@localhost:5432/autolinium_db`.
+
+```typescript
+const adapter = new PrismaPg(pool);
+```
+
+**`PrismaPg(pool)`** — Wraps our `pool` in an adapter that Prisma's internals understand. Think of it as a translator: Prisma speaks its own language for queries; `PrismaPg` translates into what `pg.Pool` speaks.
+
+```typescript
+const prisma = new PrismaClient({ adapter });
+```
+
+**`new PrismaClient({ adapter })`** — Creates the actual Prisma client *using* our adapter. This is the object you use throughout your code. `{ adapter }` is shorthand for `{ adapter: adapter }` — a JavaScript shortcut when the variable name and the property name are the same.
+
+```typescript
+async function main() {
+```
+
+**`async`** — Marks this function as asynchronous. Inside it, we can use `await` to pause and wait for things like database calls to finish. Without `async`, you can't use `await`.
+
+**`function`** — Declares a regular function. We named it [main](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/prisma/seed.ts#10-29) by convention — it's the entry point of this script.
+
+```typescript
+    const admin = await prisma.user.upsert({
+        where: { email: 'maslenia.csecu@gmail.com' },
+        update: {},
+        create: {
+            email: 'maslenia.csecu@gmail.com',
+            name: 'System Admin',
+            passwordHash: 'admin',
+            role: 'ADMIN',
+            baseSalary: 0,
+        },
+    });
+```
+
+**`await`** — Pauses execution here until `prisma.user.upsert(...)` finishes. Without `await`, the function would move on immediately before the database even responds.
+
+**`prisma.user`** — Accesses the `User` model's query methods. Prisma auto-generates these from your schema.
+
+**`.upsert({...})`** — "Update or Insert." A safe operation that prevents duplicates.
+
+**`where: { email: '...' }`** — The lookup condition. Prisma first searches for a User with this exact email.
+
+**`update: {}`** — If a user IS found, run this update. The empty object `{}` means "update nothing" — leave them exactly as they are.
+
+**`create: {...}`** — If NO user is found with that email, create a new one with these values.
+
+**Note:** `employeeId` is missing here because the Admin account came before we added `employeeId` to the schema. This will need to be fixed when building the auth system.
+
+```typescript
+main()
+    .catch((e) => {
+        console.error(e);
+        process.exit(1);
+    })
+    .finally(async () => {
+        await prisma.$disconnect();
+    });
+```
+
+**[main()](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/prisma/seed.ts#10-29)** — Calls the function. Since it's async, it returns a **Promise** (a "promise" to complete later).
+
+**`.catch((e) => {...})`** — If the Promise rejects (something went wrong), run this. `e` is the error object. `process.exit(1)` terminates the Node.js process with exit code `1`, which signals failure to the operating system.
+
+**`.finally(async () => {...})`** — Runs after the promise settles, whether it succeeded or failed. ALWAYS disconnect from the database when done. Without this, the script would hang forever with an open connection.
+
+**`prisma.$disconnect()`** — Closes all database connections in the pool. The `$` prefix is Prisma's convention for internal/system-level methods.
+
+---
+
+# FILE 3: [backend/prisma/seed-employees.ts](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/prisma/seed-employees.ts)
+
+```typescript
+import fs from 'fs';
+import path from 'path';
+```
+
+**`fs`** — Built into Node.js. Stands for "**f**ile **s**ystem." Gives you tools to read/write files on your computer.
+
+**`path`** — Also built into Node.js. Gives you tools to work with file and directory paths safely across different operating systems (Windows uses `\`, Mac/Linux use `/` — `path` handles this automatically).
+
+```typescript
+const csvPath = path.resolve(__dirname, '../../Autolinium_employee_data.csv');
+```
+
+**`path.resolve(...)`** — Builds an absolute path by combining pieces. It resolves the final correct path regardless of where you run the script from.
+
+**`__dirname`** — A special Node.js variable always equal to the **absolute path of the folder containing the current file**. For this file, it's `...backend/prisma`.
+
+**`'../../...'`** — Navigates up two levels: from [prisma/](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/prisma/schema.prisma) → to `backend/` → to `Autolinium_Automate/`. Then the CSV filename is appended.
+
+```typescript
+const data = fs.readFileSync(csvPath, 'utf8');
+```
+
+**`readFileSync`** — Reads a file **synchronously** (completely blocking — it waits until the whole file is in memory before moving on). The `Sync` suffix signals this.
+
+**`'utf8'`** — The encoding. Tells Node.js how to interpret the raw bytes of the file. UTF-8 is the standard text encoding — it means "treat these bytes as readable text characters."
+
+```typescript
+const lines = data.split('\n').slice(1);
+```
+
+**`.split('\n')`** — Splits the big text string into an array by newline character (`\n`). Each element of the array is one row from the CSV.
+
+**`.slice(1)`** — Returns a copy of the array starting from index 1 (skipping index 0, which is the header row: `"ID,Name,Email,..."`)
+
+```typescript
+for (const line of lines) {
+    if (!line.trim()) continue;
+```
+
+**`for...of`** — Loops through every item in the `lines` array. Each iteration, `line` holds one CSV row as a string.
+
+**`line.trim()`** — Removes leading/trailing whitespace and newline characters from the string.
+
+**`!line.trim()`** — If trimming the line results in an empty string (a blank line), this is `true`.
+
+**`continue`** — Skips the rest of the current loop iteration and jumps to the next one. This handles blank lines at the end of the CSV file.
+
+```typescript
+    const cols = line.split(',');
+    const empId = cols[0];
+    const name  = cols[1];
+    const email = cols[2];
+```
+
+**`.split(',')`** — Splits the CSV line by comma, giving us an array of columns.
+
+**`cols[0]`, `cols[1]`, `cols[2]`** — Array index access. Arrays are zero-indexed — the first item is at index `0`, not `1`.
+
+```typescript
+    if (!email || !email.includes('@')) continue;
+```
+
+**`!email`** — True if `email` is undefined, null, or empty string.
+
+**`!email.includes('@')`** — True if the email string doesn't contain `@`. An email without `@` is invalid.
+
+**`||`** — Logical OR. Skip this row if EITHER condition is true. This safely handles rows with no email (like Rohit Roy, ALM-004).
+
+---
+
+# FILE 4: [backend/src/index.ts](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/src/index.ts) — The Express Server
+
+```typescript
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
+```
+
+All the same logic as [seed.ts](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/prisma/seed.ts) imports, with the addition of:
+
+**`express`** — The web framework. It lets us create a server and define routes (URLs that do things when visited).
+
+**`cors`** — Cross-Origin Resource Sharing middleware. Your frontend is on port `3000`, your backend on port `5000`. By default, browsers block requests between different origins (a security feature). `cors()` middleware adds the right headers to every response to allow this.
+
+```typescript
+dotenv.config();
+```
+
+**`dotenv.config()`** — Reads [.env](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/.env) file and loads variables into `process.env`. Unlike [seed.ts](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/prisma/seed.ts) which used `import "dotenv/config"` (auto-runs on import), here we explicitly call `.config()`. Both approaches work — just two different styles.
+
+```typescript
+const app = express();
+```
+
+**`express()`** — Calls the Express factory function, which creates and returns a new Express **application** object. We store it in `app`. This `app` is your entire server — you add routes to it, configure it, and eventually tell it to start listening.
+
+```typescript
+const PORT = process.env.PORT || 5000;
+```
+
+**`process.env.PORT`** — Checks if an environment variable called `PORT` is set. On services like Heroku or Render, they set this automatically to a random port number.
+
+**`|| 5000`** — The "or" fallback. If `process.env.PORT` is undefined (not set), use `5000`. This is called **default value via short-circuit evaluation** — a very common JavaScript pattern.
+
+```typescript
+app.use(cors());
+app.use(express.json());
+```
+
+**`app.use(...)`** — Registers **middleware**. Middleware is code that runs on EVERY request before it reaches your specific route handler. Think of it as a security checkpoint or a filter every request must pass through.
+
+**`cors()`** — Calling this function creates the CORS middleware. `app.use` installs it globally for all routes.
+
+**`express.json()`** — This middleware reads the raw request body and if the `Content-Type` header says `application/json`, it parses the JSON text into a JavaScript object and attaches it to `req.body`. Without this, `req.body` would be `undefined`.
+
+---
+
+## The Health Check Route
+
+```typescript
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'Ok', message: 'Autolinium API is running' });
+});
+```
+
+**`app.get`** — Registers a route that responds to **HTTP GET** requests. GET is used for fetching/reading data. (You use GET when you type a URL in a browser.)
+
+**`'/api/health'`** — The URL path this route listens to. When someone visits `http://localhost:5000/api/health`, this function runs.
+
+**[(req, res) =>](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/prisma/seed.ts#10-29)** — An arrow function with two parameters:
+- **`req`** (request) — Contains everything about the incoming request: URL, headers, body, query params, etc.
+- **`res`** (response) — The tool you use to send a reply back to whoever made the request.
+
+**`res.status(200)`** — Sets the HTTP status code of the response. 200 means "OK / Success." This returns the `res` object again (method chaining), so you can immediately call `.json()` on it.
+
+**`.json({ status: 'Ok', ... })`** — Sends a JSON response. This automatically sets the `Content-Type: application/json` header and converts the JavaScript object to a JSON string.
+
+---
+
+## The Check-In Route
+
+```typescript
+app.post('/api/attendance/check-in', async (req, res) => {
+```
+
+**`app.post`** — Registers a route for **HTTP POST** requests. POST is used for creating/sending data.
+
+**`async`** — Makes the callback asynchronous so we can use `await` inside it for database calls.
+
+```typescript
+    const { userId = 1 } = req.body;
+```
+
+**`const { userId = 1 }`** — **Destructuring with a default value.** Pulls `userId` out of `req.body`. If the frontend didn't send a `userId` (or sent `null`/`undefined`), it defaults to `1`. This is temporary — when auth is built, the real user ID will come from the auth token.
+
+```typescript
+    const now = new Date();
+```
+
+**`new Date()`** — Creates a JavaScript Date object representing the current moment in time, down to the millisecond. Internally stored as UTC.
+
+```typescript
+    const options: any = { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' };
+```
+
+**`const options: any`** — Declares a variable with TypeScript type annotation `any`. Normally TypeScript is strict about types, but `any` says "don't check this, trust me." We use it here because the TypeScript type definitions for `Intl.DateTimeFormat` options are overly strict and require more complex typing. It's a pragmatic shortcut.
+
+**`timeZone: 'Asia/Dhaka'`** — IANA timezone name for Bangladesh (UTC+6). This forces all date operations to interpret time in Dhaka, not wherever the server is located.
+
+**`year: 'numeric', month: '2-digit', day: '2-digit'`** — Formatting rules: year as a full 4-digit number, month and day with leading zeros (so January → "01", not "1").
+
+```typescript
+    const formatter = new Intl.DateTimeFormat('en-CA', options);
+```
+
+**`Intl.DateTimeFormat`** — A built-in JavaScript internationalization API for formatting dates and times.
+
+**`'en-CA'`** — The locale. [en](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/components/dashboard/AttendanceCard.tsx#9-159) = English, `CA` = Canada. We use Canadian locale specifically because Canada formats dates as `YYYY-MM-DD` — the ISO format that PostgreSQL accepts for date columns. If we used `'en-US'`, we'd get `MM/DD/YYYY`, which PostgreSQL would reject.
+
+```typescript
+    const localDate = new Date(formatter.format(now));
+```
+
+**`formatter.format(now)`** — Converts the `now` Date object into a string like `"2026-02-27"` using Dhaka timezone.
+
+**`new Date("2026-02-27")`** — Converts that string back into a JavaScript Date object. This Date represents midnight of Feb 27 in UTC, which is what PostgreSQL's `@db.Date` column expects for comparison.
+
+```typescript
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const isPastEleven = hours > 11 || (hours === 11 && minutes > 0);
+```
+
+**`.getHours()`** — Returns the hour of the Date, 0–23 (0 = midnight, 11 = 11 AM, 23 = 11 PM).
+
+**`.getMinutes()`** — Returns the minute, 0–59.
+
+**`hours > 11`** — True for 12:00 PM and beyond.
+
+**`hours === 11 && minutes > 0`** — True for 11:01 AM through 11:59 AM. Exactly 11:00:00 is still on time. `&&` means "AND" — both conditions must be true.
+
+**`||`** — "OR." Either condition being true makes `isPastEleven` true.
+
+```typescript
+        const record = await prisma.attendance.create({
+            data: {
+                userId: userId,
+                recordDate: localDate,
+                entryTime: now,
+                presenceStatus: 'PRESENT',
+                lateStatus: isPastEleven ? 'LATE_AUTO' : 'TIMELY',
+            }
+        });
+```
+
+**`prisma.attendance.create({...})`** — Inserts a new row into the [Attendance](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/components/dashboard/AttendanceCard.tsx#9-159) table.
+
+**`data: {...}`** — The values for each column in the new row.
+
+**`isPastEleven ? 'LATE_AUTO' : 'TIMELY'`** — The **ternary operator**. Format: `condition ? value_if_true : value_if_false`. If `isPastEleven` is true, use `'LATE_AUTO'`; otherwise use `'TIMELY'`. One-line if/else.
+
+```typescript
+        res.status(201).json({ message: 'Check-in successful', data: record });
+```
+
+**`201`** — HTTP status code for "Created." Use 201 (not 200) when a new resource has been created. It's more semantically accurate.
+
+```typescript
+    } catch (error) {
+        console.error("Check-in Error:", error);
+        res.status(500).json({ error: 'Failed to log attendance' });
+    }
+```
+
+**`try...catch`** — Error handling. If ANYTHING inside `try` throws an error (database down, value invalid, network issue), execution jumps to `catch`. Without this, an unhandled error would crash the entire server.
+
+**`500`** — HTTP status code for "Internal Server Error." Something went wrong on the server side.
+
+---
+
+## The Status Check Route
+
+```typescript
+app.get('/api/attendance/status/:userId', async (req, res) => {
+    const { userId } = req.params;
+```
+
+**`':userId'`** — A **route parameter**. The colon marks it as dynamic. If someone calls `/api/attendance/status/5`, then `userId` will be `"5"`. The parameter name after the colon is how you access it in `req.params`.
+
+**`req.params`** — An object containing all route parameters. Since the route defines `:userId`, `req.params` will have `{ userId: "5" }`.
+
+```typescript
+        const attendance = await prisma.attendance.findFirst({
+            where: {
+                userId: parseInt(userId),
+                recordDate: localToday
+            }
+        });
+```
+
+**`.findFirst({...})`** — Searches for the first record matching the conditions. Returns the record object if found, or `null` if not found.
+
+**`parseInt(userId)`** — `req.params` values are always strings. Prisma expects an integer for `userId`. `parseInt()` converts `"1"` (string) to `1` (number).
+
+```typescript
+        res.status(200).json({ checkedIn: !!attendance, data: attendance });
+```
+
+**`!!attendance`** — Double negation. `!null` = `true`, then `!true` = `false`. So `!!null` = `false`. And `!!{...someObject}` = `true`. It's a concise way to convert any value to a strict boolean (`true`/`false`).
+
+```typescript
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+```
+
+**`app.listen(PORT, callback)`** — Starts the HTTP server, binding it to the specified port. Your server is now "alive" and waiting for requests.
+
+**`` `Server is running on port ${PORT}` ``** — A **template literal** (backtick strings). `${PORT}` embeds the value of the `PORT` variable directly into the string. Cleaner than `"Server on port" + PORT + "!"`.
+
+---
+
+# FILE 5: [frontend/src/app/layout.tsx](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/app/layout.tsx)
+
+```typescript
+import type { Metadata } from "next";
+```
+
+**`import type`** — TypeScript-specific. Imports only the **type definition**, not actual runtime code. `Metadata` is a type that describes the shape of the metadata object (what properties are allowed). Using `import type` is a good practice — TypeScript can strip it at build time since it's just for type checking.
+
+```typescript
+import { Geist, Geist_Mono } from "next/font/google";
+```
+
+**`next/font/google`** — Next.js's built-in font optimization system. Instead of linking to Google Fonts in your HTML (which requires a separate network request, slowing down the page), Next.js downloads the font files at build time and serves them from your own server. Zero external requests = faster load, better privacy.
+
+**`Geist`** — The sans-serif font (used for body text).
+
+**`Geist_Mono`** — The monospace font (used for code-like labels, your "terminal aesthetic" text). Monospace means every character takes up the same width — that's what makes it look like a coding terminal.
+
+```typescript
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+```
+
+**`Geist({...})`** — Calls the font function to configure and load the font.
+
+**`variable: "--font-geist-sans"`** — Creates a **CSS Custom Property** (CSS variable) with this name. You can then use `var(--font-geist-sans)` anywhere in your CSS to apply this font.
+
+**`subsets: ["latin"]`** — Only download the "latin" character subset (A-Z, a-z, numbers, punctuation). If you need support for Arabic, Bengali, etc., you'd add more subsets. Downloading only what you need = smaller file = faster.
+
+```typescript
+export const metadata: Metadata = {
+  title: "Autolinium // System",
+  description: "Internal Office & KPI Management",
+};
+```
+
+**`export const`** — `export` makes this variable available to other files that import this module. Next.js specifically looks for a `metadata` export in [layout.tsx](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/app/layout.tsx) and [page.tsx](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/app/page.tsx) files to set the `<title>` and `<meta>` tags in the HTML `<head>`.
+
+**`title`** — Becomes the browser tab label and search engine result title.
+
+**`description`** — Becomes the `<meta name="description">` tag — shown in Google search results.
+
+```typescript
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+```
+
+**`export default`** — Marks this as the primary export of the file. Next.js requires the layout component to be the default export.
+
+**`function RootLayout`** — A React component (function that returns JSX).
+
+**`{ children }`** — Destructuring the props. Props are the inputs passed to a component.
+
+**`Readonly<{ children: React.ReactNode }>`** — TypeScript type annotation.
+- `React.ReactNode` — Means "any valid React content" (string, number, JSX, null, array, etc.)
+- `Readonly<...>` — TypeScript utility type that prevents the props from being mutated inside the component — enforces that you're not accidentally modifying inputs.
+
+```typescript
+  return (
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+```
+
+**`lang="en"`** — Accessibility attribute. Screen readers use this.
+
+**`` `${geistSans.variable} ${geistMono.variable}` ``** — The font objects expose a `.variable` property which is the CSS variable name (`--font-geist-sans`). By adding them as class names to `<body>`, they activate the CSS variable for the font throughout the entire app.
+
+**`antialiased`** — A Tailwind class that enables **subpixel antialiasing** — smooths font rendering. Makes text look crisper.
+
+---
+
+# FILE 6: [frontend/src/app/page.tsx](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/app/page.tsx)
+
+```typescript
+import { AttendanceCard } from "@/components/dashboard/AttendanceCard";
+```
+
+**`@/`** — A path alias configured in [tsconfig.json](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/tsconfig.json). `@` maps to the `src/` folder. So this is equivalent to `../../components/dashboard/AttendanceCard` — just much cleaner and not fragile to folder depth changes.
+
+```typescript
+export default function Home() {
+  return (
+    <div className="dashboard-root-container">
+      <div className="mb-8">
+        <h1 className="text-3xl font-black text-primary uppercase font-mono tracking-tighter">
+          Dashboard // Overview
+        </h1>
+        <p className="text-slate-500 font-mono text-xs uppercase font-bold">
+          System_Status: Online
+        </p>
+      </div>
+```
+
+**`mb-8`** — Tailwind: `margin-bottom: 2rem` (32px). Adds space below this div.
+
+**`text-3xl`** — Tailwind: font-size 1.875rem. One of Tailwind's preset text sizes.
+
+**`font-black`** — Tailwind: font-weight 900 (the heaviest weight). Makes text extremely bold.
+
+**`text-primary`** — Tailwind uses your CSS variable `--primary` to get the cyan color. This is what makes your cyan branding work everywhere — one variable, infinite uses.
+
+**`uppercase`** — Tailwind: CSS `text-transform: uppercase`. All letters become capital.
+
+**`tracking-tighter`** — Tailwind: letter-spacing -0.05em. Brings letters closer together — the "compressed terminal" look.
+
+```typescript
+      <div className="dashboard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+```
+
+**`grid`** — Tailwind: `display: grid`. Activates CSS Grid Layout.
+
+**`grid-cols-1`** — By default (mobile), show 1 column.
+
+**`md:grid-cols-2`** — `md:` is a Tailwind **breakpoint prefix**. At medium screens (768px+), switch to 2 columns.
+
+**`lg:grid-cols-3`** — At large screens (1024px+), switch to 3 columns.
+
+**`gap-6`** — Tailwind: `gap: 1.5rem`. Spacing between grid items.
+
+This is **responsive design in one line** — no media queries needed.
+
+---
+
+# FILE 7: [frontend/src/components/layout/AppShell.tsx](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/components/layout/AppShell.tsx)
+
+```typescript
+"use client"
+```
+
+**`"use client"`** — A Next.js 13+ directive. In Next.js App Router, components are **Server Components by default** — they render on the server and send static HTML to the browser. They can't use browser APIs or React hooks.
+
+This directive marks the file as a **Client Component** — it runs in the browser. Required whenever you use `useState`, `useEffect`, `useContext`, event handlers, or browser APIs like `window`.
+
+```typescript
+import { useIsMobile } from "@/hooks/use-mobile"
+```
+
+**`useIsMobile`** — A custom hook. Convention: all React hooks start with `use`. This hook internally uses `window.matchMedia` (a browser API) to check the screen width and returns a boolean.
+
+```typescript
+export function AppShell({ children }: { children: React.ReactNode }) {
+    const isMobile = useIsMobile()
+```
+
+**`const isMobile = useIsMobile()`** — Calls the hook. Every time the screen is resized past the mobile breakpoint, this hook updates `isMobile` and React re-renders this component. The navigation switches instantly without a page reload.
+
+```typescript
+    return (
+        <SidebarProvider className="sidebar-state-context">
+```
+
+**`SidebarProvider`** — A Shadcn component that uses React's Context API to share sidebar state (open/closed) with all child components. The `SidebarTrigger` button (the hamburger menu) and the [Sidebar](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/components/layout/AppSidebar.tsx#47-103) itself need to communicate — `SidebarProvider` is the shared memory between them.
+
+```typescript
+            <div className="app-shell-root flex min-h-screen w-full bg-white font-mono">
+```
+
+**`flex`** — Tailwind: `display: flex`. Activates Flexbox layout. Children arrange themselves in a row by default.
+
+**`min-h-screen`** — Tailwind: `min-height: 100vh`. Ensures the app always fills the full viewport height.
+
+**`w-full`** — Tailwind: `width: 100%`. Takes full available width.
+
+```typescript
+                {!isMobile && <AppSidebar />}
+```
+
+**`&&`** — Short-circuit evaluation. In JSX, `condition && <Component />` means "only render `<Component />` if `condition` is true." If `!isMobile` (not mobile = desktop) is true, render the sidebar. If false, render nothing.
+
+```typescript
+                <main className="main-content-wrapper flex-1 flex flex-col min-w-0">
+```
+
+**`<main>`** — A semantic HTML5 element. Signals to browsers, screen readers, and search engines that this is the main content area.
+
+**`flex-1`** — Tailwind: `flex: 1`. In a flex container, this makes the element grow to fill all remaining space. Since the sidebar has a fixed width, `flex-1` on [main](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/prisma/seed.ts#10-29) makes it take up everything else.
+
+**`flex-col`** — Changes the flex direction to column (children stack vertically instead of horizontally).
+
+**`min-w-0`** — Prevents a flex child from overflowing its container. A subtle but important fix — without it, content inside [main](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/prisma/seed.ts#10-29) can push beyond its boundaries.
+
+```typescript
+                    <header className="app-header-top h-14 border-b-2 border-primary flex items-center px-4 justify-between bg-white sticky top-0 z-40">
+```
+
+**`h-14`** — Height: 3.5rem (56px).
+
+**`sticky top-0`** — The header sticks to the top of the viewport as you scroll down.
+
+**`z-40`** — CSS z-index: 40. Controls stacking order. The header appears ON TOP of content below it when scrolling.
+
+**`justify-between`** — Flex: pushes children to opposite ends. Left item goes to far left, right item to far right.
+
+---
+
+# FILE 8: [frontend/src/components/layout/AppSidebar.tsx](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/components/layout/AppSidebar.tsx)
+
+```typescript
+const items = [
+    { title: "Dashboard", url: "/", icon: Home },
+    ...
+]
+```
+
+**Why an array instead of hardcoded HTML?** — This is the **data-driven component** pattern. Your navigation data lives in one place. Adding a new nav item = add one object. Removing one = delete one object. Clean, maintainable, DRY.
+
+```typescript
+<SidebarMenuButton asChild className="hover: bg-primary/10 rounded-none ...">
+    <a href={item.url}>
+```
+
+**`asChild`** — A Shadcn/Radix UI prop. It tells the component: "Don't render your own HTML element — instead, give your props and behavior to your child element." So `SidebarMenuButton` gives its styling and click behavior to the `<a>` tag inside it. This avoids a button-inside-button nesting problem.
+
+**`bg-primary/10`** — `primary` is your cyan color. `/10` means 10% opacity. So on hover, you get a very faint cyan background tint.
+
+---
+
+# FILE 9: [frontend/src/components/layout/MobileNav.tsx](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/components/layout/MobileNav.tsx)
+
+```typescript
+export function MobileNav() {
+    return (
+        <nav className="mobile-nav-root fixed bottom-0 left-0 right-0 h-16 bg-white border-t-4 border-primary grid grid-cols-5 items-center px-2 z-50">
+```
+
+**`fixed`** — Tailwind: `position: fixed`. The nav floats fixed to the viewport — it stays put as you scroll, always visible.
+
+**`bottom-0 left-0 right-0`** — Pins the element to the bottom edge, spanning the full width.
+
+**`border-t-4`** — 4px top border (the thick cyan line at the top of the nav).
+
+**`grid-cols-5`** — 5 equal columns — one per nav item. Grid perfectly divides the space evenly.
+
+**`z-50`** — Higher z-index than the header's z-40, ensuring the mobile nav is always on top of everything.
+
+```typescript
+<item.icon className="w-5 h-5 text-primary group-active:scale-95 transition-transform" />
+```
+
+**`item.icon`** — The Lucide icon component stored in the data array. In JSX, components must start with an uppercase letter OR be accessed via dot notation. `item.icon` works because it's accessed from an object.
+
+**`group-active:scale-95`** — Tailwind: when the parent (which has the `group` class) is clicked/active, scale this element to 95% of its size. A subtle press animation.
+
+**`transition-transform`** — Animate the transform property smoothly instead of jumping instantly.
+
+---
+
+# FILE 10: [frontend/src/components/dashboard/AttendanceCard.tsx](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/frontend/src/components/dashboard/AttendanceCard.tsx)
+
+```typescript
+"use client"
+```
+Required — this component uses `useState`, `useEffect`, and event handlers.
+
+```typescript
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Clock, Fingerprint, AlertCircle } from "lucide-react"
+```
+
+**`{ useState, useEffect }`** — React's core hooks. Named imports from the `react` package.
+
+**`Card, CardContent, CardHeader, CardTitle`** — Shadcn components. They're pre-styled containers — you just compose them together. Shadcn generates these as editable files in your `src/components/ui/` folder.
+
+**`Clock, Fingerprint, AlertCircle`** — Icons from the `lucide-react` library. Lucide is a clean, consistent open-source icon set. Each icon is a React component — you use it like `<Clock />`.
+
+---
+
+## State Declaration
+
+```typescript
+const [time, setTime] = useState(new Date())
+```
+
+**`useState`** — A React Hook. Always returns a pair:
+- **`time`** — The current value of this state variable (initially `new Date()`)
+- **`setTime`** — The setter function. The ONLY way to update `time`. Never mutate state directly (`time = new Date()` would break React).
+
+**`new Date()`** — The initial value. When the component first renders, `time` starts as the current moment.
+
+```typescript
+const [status, setStatus] = useState<"syncing" | "idle" | "present" | "late">("syncing")
+```
+
+**`useState<"syncing" | "idle" | "present" | "late">`** — TypeScript generic type annotation on `useState`. The `<...>` constrains what values `status` can hold. `|` means "or" (union type). TypeScript will give you an error if you try `setStatus("broken")` — it's not in the union.
+
+**[("syncing")](file:///C:/Users/Digital%20Outlet%20BD/Desktop/autolinium/KR%20Steel/Autolinium_Automate/backend/prisma/seed.ts#10-29)** — Initial value. The card starts in "syncing" mode, not "idle," to avoid showing the wrong button state before the database check completes.
+
+---
+
+## The Clock Effect
+
+```typescript
+useEffect(() => {
+    const timer = setInterval(() => {
+        setTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
+}, [])
+```
+
+**`useEffect(callback, dependencies)`** — Runs `callback` after the component renders.
+
+**`setInterval(fn, 1000)`** — Browser API. Calls `fn` every 1000ms (1 second) indefinitely. Returns a timer ID (stored in `timer`) that you need to stop it later.
+
+**`setTime(new Date())`** — Updates state. This triggers a re-render. The clock on screen is always the latest value of `time`.
+
+**`return () => clearInterval(timer)`** — The **cleanup function**. React calls this when the component unmounts (when you navigate away). `clearInterval(timer)` uses the ID from earlier to stop the interval. Without this, the interval keeps running after the component is gone — a memory leak.
+
+**`[]`** — Empty dependency array. Means "run this effect exactly once, after the first render, and never again." No dependencies = no reason to re-run.
+
+---
+
+## The Page-Load Recall Effect
+
+```typescript
+useEffect(() => {
+    const checkStatus = async () => {
+```
+
+**`const checkStatus = async () => {}`** — Declares an `async` arrow function inside the effect. You can't make `useEffect`'s callback itself `async` (React would break), so the pattern is: define an async function inside, then call it.
+
+```typescript
+            const response = await fetch('http://localhost:5000/api/attendance/status/1');
+```
+
+**`fetch(...)`** — The browser's built-in HTTP request API. By default (no options), it makes a GET request.
+
+**`await fetch(...)`** — Pauses here until the server responds and sends back headers. Returns a `Response` object.
+
+```typescript
+            const result = await response.json();
+```
+
+**`await response.json()`** — Pauses again while the browser reads and parses the response body as JSON. Returns the actual JavaScript object.
+
+```typescript
+            if (result.checkedIn) {
+                const entryTime = new Date(result.data.entryTime);
+                const hours = entryTime.getHours();
+                const isLate = hours > 11 || (hours === 11 && entryTime.getMinutes() > 0);
+                setStatus(isLate ? "late" : "present");
+            } else {
+                setStatus("idle");
+            }
+```
+
+**`result.checkedIn`** — The backend sends `{ checkedIn: true/false, data: {...} }`. We check the boolean `checkedIn` field.
+
+**`new Date(result.data.entryTime)`** — The backend sends the entry time as an ISO string (like `"2026-02-27T05:03:00.000Z"`). `new Date(string)` parses it back into a JavaScript Date object so we can call `.getHours()` on it.
+
+**Purpose of this entire block:** Reconstruct the correct status based on the stored check-in time so the UI shows the right state immediately on load — bypassing the "syncing" stage as fast as possible.
+
+```typescript
+    } catch (error) {
+        console.error("failed to sync attendance status:", error);
+        setStatus("idle");
+    }
+```
+
+If the backend is down or the request fails, we silently fall back to `"idle"` — the user can still see the check-in button. The app degrades gracefully rather than breaking.
+
+---
+
+## The Check-In Handler
+
+```typescript
+const handleCheckIn = async () => {
+    console.log("🚀 Frontend: Initiate_Check_In clicked");
+    setIsLoading(true);
+```
+
+**`console.log`** — Prints a message to the browser's developer tools console. The emoji makes it easy to spot in a stream of logs. Used for debugging.
+
+**`setIsLoading(true)`** — Immediately disables the button. This is the first thing we do — before awaiting the network call. Prevents double-submit if the user clicks quickly.
+
+```typescript
+    try {
+        const response = await fetch('http://localhost:5000/api/attendance/check-in', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: 1 })
+        });
+```
+
+**`method: 'POST'`** — Overrides the default GET to send a POST request.
+
+**`headers: { 'Content-Type': 'application/json' }`** — Tells the server how to interpret the body. Without this header, Express's `express.json()` middleware won't parse `req.body` and it'll be `undefined`.
+
+**`body: JSON.stringify({ userId: 1 })`** — `JSON.stringify` converts a JavaScript object into a JSON string for transport. `fetch` requires the body to be a string (or Blob/FormData), not an object.
+
+```typescript
+        if (response.ok) {
+            setStatus(isPastEleven ? "late" : "present");
+        }
+```
+
+**`response.ok`** — A boolean on the Response object. `true` if the HTTP status code is 200–299. `false` for 400, 500, etc.
+
+**`isPastEleven ? "late" : "present"`** — Determines the new status based on the current time at the moment of clicking.
+
+```typescript
+    } finally {
+        setIsLoading(false);
+    }
+```
+
+**`finally`** — Runs after `try` completes OR after `catch` runs — guaranteed to always execute. We always reset `isLoading` to `false` here, even if the request failed, so the button isn't permanently stuck.
+
+---
+
+## The JSX (The Visual)
+
+```typescript
+<Button
+    onClick={handleCheckIn}
+    disabled={isLoading || status !== "idle"}
+    className={`action-button-main w-full h-14 rounded-none font-black text-lg uppercase font-mono tracking-tight transition-all
+        ${status === "idle" ? 'hover:bg-primary/90' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}
+>
+    {status === "syncing" ? "Syncing_Status..." : (isLoading ? "Processing..." : status === "idle" ? "Initiate_Check_In" : "Checked_In")}
+</Button>
+```
+
+**`disabled={isLoading || status !== "idle"}`** — Button is disabled if loading OR if already checked in. A disabled button cannot be clicked.
+
+**`` className={`...${status === "idle" ? ... : ...}`} ``** — Dynamic class names. The button's visual style changes based on state:
+- `status === "idle"` → Full active styling with hover effect
+- Not idle (checked in) → Grey, muted styling to communicate "no action available"
+
+**The nested ternary for button text:**
+- Is it `"syncing"`? Show `"Syncing_Status..."`
+- If not, is `isLoading` true? Show `"Processing..."`
+- If not, is `status === "idle"`? Show `"Initiate_Check_In"`
+- Otherwise (present or late): Show `"Checked_In"`
+
+```typescript
+<div className="footer-meta text-[9px] text-slate-400 font-mono uppercase font-bold tracking-tighter">
+    Log_ID: {Math.random().toString(36).substring(7).toUpperCase()} // System_Ready
+</div>
+```
+
+**`Math.random()`** — Generates a random decimal number between 0 and 1.
+
+**`.toString(36)`** — Converts the number to a base-36 string. Base-36 uses digits 0-9 and letters a-z, producing a compact alphanumeric string like `"0.4fzyo82mvyr"`.
+
+**`.substring(7)`** — Cuts off the first 7 characters (`"0.4fzyo"`) leaving just the random part.
+
+**`.toUpperCase()`** — Makes it look like a system code: `"82MVYR"`.
+
+> **Note:** This `Log_ID` is decorative — it's randomly generated each render and not stored anywhere. It's purely for aesthetics, making the UI feel like a real technical system.
+
+---
+
+*End of explanation. Every word of every line has been accounted for.*
+
+**Last updated:** February 27, 2026

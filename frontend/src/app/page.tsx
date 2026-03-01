@@ -1,5 +1,5 @@
 import { AttendanceCard } from "@/components/dashboard/AttendanceCard";
-
+import { KpiCard } from "@/components/dashboard/KpiCard";
 export default function Home() {
   return (
     <div className="dashboard-root-container">
@@ -18,6 +18,7 @@ export default function Home() {
 
         {/* OUR NEW ATTENDANCE CARD */}
         <AttendanceCard />
+        <KpiCard />
 
         {/* Empty Slots for Tomorrow (Day 3 & 4) */}
         <div className="placeholder-slot border-2 border-dashed border-slate-200 h-[350px] flex flex-col items-center justify-center p-6 bg-slate-50/50">

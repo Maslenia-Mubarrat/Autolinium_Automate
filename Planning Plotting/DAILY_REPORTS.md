@@ -50,3 +50,51 @@ Today was a critical "Foundation Day." We focused on establishing the core digit
 3. **Real-time Clock:** Enabling the automated workday timer.
 
 ---
+
+---
+
+# 📊 Autolinium - Executive Project Dashboard
+
+**Date:** February 28, 2026
+**Current Phase:** KPI Logic Engine — Day 3 of 7-Day Sprint
+**Overall Completion:** ▓▓▓▓░░░░░░ 43%
+**Session Hours:** ~3:15 PM (Feb 27) → 3:37 AM (Feb 28) | ~12 hrs 22 min
+
+---
+
+## 📅 Today's Executive Summary
+
+Today was primarily a **"Verification & Precision Day."** Before writing new code, a thorough re-review of the entire Product Requirements Document, KPI calculation rules, database schema, and leave approval logic was completed. This review confirmed all schema decisions were correct and prevented potential future rework. Practical coding output was lower than a standard build day, but the quality assurance performed today directly protects the integrity of the KPI engine.
+
+### 🏆 Key Achievements
+
+- **PRD & Schema Deep Audit:** The complete KPI formula (9 categories), leave flow, absenceInfo logic, and all pending feature dependencies were re-verified against the original requirements. Zero discrepancies found.
+- **Admin Attendance Overview (Live):** A new page at `/attendance` now shows a real-time log of all employee check-ins for the day — including name, employee ID, check-in time, and ON_TIME / LATE status badges.
+- **KPI Calculation API (Backend):** A working `/api/kpi/status/:userId` route calculates KPI 1 (Attendance) and KPI 2 (Timeliness) for the current month using exact formulas. Handles approved, informed, and uninformed absences correctly. Uninformed late deductions calculated to the nearest 30-minute block.
+- **Infrastructure Debugging:** Identified and resolved a critical stale Node.js process issue that was silently blocking the new backend code from loading.
+
+---
+
+## 📈 Milestone Progress
+
+| Milestone | Status | Details |
+| :--- | :--- | :--- |
+| **Project Blueprinting** | ✅ Complete | PRD, Feature Matrix, ER Diagram locked |
+| **Database Architecture** | ✅ Complete | All 10 models live, 11 employees seeded |
+| **Navigation Shell** | ✅ Complete | Desktop sidebar + Mobile bottom nav |
+| **Attendance System** | ✅ Complete | Check-in, status recall, midnight fix |
+| **Admin Attendance View** | ✅ Complete | Live table at `/attendance` |
+| **KPI Engine (Partial)** | 🏃 In Progress | KPI 1 & 2 backend done. Remaining KPIs pending prerequisite features |
+| **KPI Score Card (UI)** | ⏳ Tomorrow | Frontend component carried to Day 4 |
+| **Task & Leave Board** | ⏳ Tomorrow | Day 4 primary objective |
+
+---
+
+## 🚀 Plan for Tomorrow (Day 4)
+
+1. **KPI Score Card** — Frontend component to display KPI 1 & 2 scores visually on employee dashboard
+2. **Task & Office Board** — Admin creates tasks, Employees mark as done
+3. **Leave Request System** — Employee submits leave, Admin approves/rejects
+4. **Informed Late Request** — Employee sets promiseTime (enables the remaining KPI 2 formula)
+
+---
