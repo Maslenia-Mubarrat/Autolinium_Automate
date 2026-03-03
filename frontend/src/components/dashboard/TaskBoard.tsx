@@ -53,6 +53,12 @@ export function TaskBoard() {
         e.preventDefault();
         if (!newTaskTitle.trim())
             return;
+
+        const userStr = localStorage.getItem("user");
+        if (!userStr) return;
+        const user = JSON.parse(userStr);
+
+
         setIsCreating(true);
         try {
             const response = await
@@ -63,7 +69,7 @@ export function TaskBoard() {
                         body: JSON.stringify({
                             title: newTaskTitle,
                             description: "Quick task from dashboard",
-                            assigneeId: 1
+                            assigneeId: user.id
 
                         })
                     }

@@ -16,3 +16,6 @@ index.ts page after updating the kpi parts.
 14. prisma schema ta aamar valo kore porte hobe
 15. ctrl + shift + p and a command - they solved the red line 
 under task problem, how it was done and what was the problem
+16. why localstorage?
+17. what is ghost process, how do i know about it
+18. need to what background commands you run, so that i can run also if needed

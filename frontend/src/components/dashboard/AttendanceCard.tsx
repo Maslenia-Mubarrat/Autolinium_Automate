@@ -7,113 +7,139 @@ import { Badge } from "@/components/ui/badge"
 import { Clock, Fingerprint, AlertCircle } from "lucide-react"
 
 export function AttendanceCard() {
-    // 1. Reactive State: The 'time' state triggers a re-render every second
+    // 1. Reactive State
     const [time, setTime] = useState(new Date())
-    const [status, setStatus] = useState<"syncing" | "idle" | "present" | "late">("syncing")
+    const [status, setStatus] = useState<"syncing" | "idle" | "present" | "late" | "done">("syncing")
     const [isLoading, setIsLoading] = useState(false);
+    const [entryTime, setEntryTime] = useState<Date | null>(null);
+    const [exitTime, setExitTime] = useState<Date | null>(null);
 
-    // 2. Side-Effect: Creating a 1000ms heartbeat
+    // 2. Heartbeat (1000ms)
     useEffect(() => {
         const timer = setInterval(() => {
             setTime(new Date())
         }, 1000)
-
-        // Destructor: Always clear the interval to prevent memory leaks
         return () => clearInterval(timer)
     }, [])
 
-    //checking the database on page load - recall logic
-    useEffect(() => {
-        const checkStatus = async () => {
-            try {
-                //asking the machine if we already checked in
-                const response = await fetch('http://localhost:5000/api/attendance/status/1');
-                const result = await response.json();
+    // 3. Status Recall (Verify if already checked in/out today)
+    const checkStatus = async () => {
 
-                if (result.checkedIn) {
-                    const entryTime = new Date(result.data.entryTime);
-                    const hours = entryTime.getHours();
-                    const isLate = hours > 11 || (hours === 11 && entryTime.getMinutes() > 0);
+        //first thing to do - getting the logged-in user from storage
+        const userStr = localStorage.getItem("user");
+        if (!userStr) return;
+        const user = JSON.parse(userStr);
 
-                    setStatus(isLate ? "late" : "present");
+        try {
+            //second thing- we will now use user.id
+            const response = await fetch(`http://localhost:5000/api/attendance/status/${user.id}`);
+            const result = await response.json();
 
+            if (result.checkedIn) {
+                const fetchedEntry = new Date(result.data.entryTime);
+                setEntryTime(fetchedEntry);
+
+                if (result.data.exitTime) {
+                    setExitTime(new Date(result.data.exitTime));
+                    setStatus("done");
                 } else {
-                    setStatus("idle");
+                    const hours = fetchedEntry.getHours();
+                    const isLate = hours > 11 || (hours === 11 && fetchedEntry.getMinutes() > 0);
+                    setStatus(isLate ? "late" : "present");
                 }
-
-            }
-            catch (error) {
-                console.error("failed to sync attendacne status:", error);
+            } else {
                 setStatus("idle");
-
             }
+        } catch (error) {
+            console.error("failed to sync attendance status:", error);
+            setStatus("idle");
+        }
+    };
 
-
-        };
+    useEffect(() => {
         checkStatus();
     }, []);
 
+    // Calculate live session duration (entry to now, or entry to exit)
+    let durationStr = "0h 0m";
+    if (entryTime) {
+        const end = exitTime || time;
+        const diffMs = end.getTime() - entryTime.getTime();
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const hrs = Math.floor(diffMins / 60);
+        const mins = diffMins % 60;
+        durationStr = `${hrs}h ${mins}m`;
+    }
 
+    const handleCheckIn = async () => {
+        const userStr = localStorage.getItem("user");
+        if (!userStr)
+            return;
+        const user = JSON.parse(userStr);
+        setIsLoading(true);
+        try {
+            const response = await fetch('http://localhost:5000/api/attendance/check-in', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.id })
+            });
+            if (response.ok) {
+                await checkStatus();
+            }
+        } catch (error) {
+            console.error("Check-in error:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleCheckOut = async () => {
+        const userStr = localStorage.getItem("user");
+        if (!userStr)
+            return;
+        const user = JSON.parse(userStr);
+        setIsLoading(true);
+        try {
+            const response = await fetch('http://localhost:5000/api/attendance/check-out', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.id })
+            });
+            if (response.ok) {
+                await checkStatus();
+            }
+        } catch (error) {
+            console.error("Check-out error:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const hours = time.getHours()
     const minutes = time.getMinutes()
     const isPastEleven = hours > 11 || (hours === 11 && minutes > 0)
 
-
-
-    //handle the button click
-    const handleCheckIn = async () => {
-        console.log("🚀 Frontend: Initiate_Check_In clicked");
-        setIsLoading(true);
-        try {
-
-            const response = await
-                fetch('http://localhost:5000/api/attendance/check-in',
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: 1 })
-                    }
-
-                );
-            if (response.ok) {
-                setStatus(isPastEleven ? "late" : "present");
-                console.log("✅ Success: Attendance logged in database");
-            }
-            else {
-                console.error("server error: failed to log attendance");
-            }
-
-        }
-        catch (error) {
-            console.error("Network error: is the backend running?", error);
-        }
-        finally {
-            setIsLoading(false);
-        }
-
-    };
-
     return (
-        <Card className="attendance-card-root border-2 
-        border-primary rounded-none shadow-none 
-        bg-white overflow-hidden">
+        <Card className="attendance-card-root border-2 border-primary rounded-none shadow-none bg-white overflow-hidden">
             <CardHeader className="attendance-header border-b-2 border-primary bg-slate-50 flex flex-row items-center justify-between py-3">
                 <CardTitle className="card-title-text text-sm font-black uppercase tracking-tighter font-mono flex items-center gap-2">
                     <Fingerprint className="w-4 h-4 text-primary" />
                     Attendance_Console
                 </CardTitle>
                 <div className="status-badge-wrapper flex items-center gap-2">
-                    {status === "late" && (
+                    {status === "done" ? (
+                        <Badge className="status-badge bg-slate-800 text-white rounded-none font-mono text-[10px] uppercase">
+                            Shift: Completed
+                        </Badge>
+                    ) : status === "late" ? (
                         <Badge variant="destructive" className="status-badge rounded-none font-mono text-[10px] uppercase">
                             Status: Late
                         </Badge>
-                    )}
-                    {status === "present" && (
+                    ) : status === "present" ? (
                         <Badge className="status-badge bg-green-600 hover:bg-green-700 rounded-none font-mono text-[10px] uppercase text-white">
                             Status: On_Time
                         </Badge>
-                    )}
+                    ) : null}
                 </div>
             </CardHeader>
 
@@ -129,24 +155,56 @@ export function AttendanceCard() {
                         </h2>
                     </div>
 
+                    {(status === "present" || status === "late" || status === "done") && (
+                        <div className="duration-display border-2 border-primary/20 bg-primary/5 p-4 flex flex-col items-center w-full">
+                            <span className="text-[10px] font-mono font-black uppercase text-slate-500 mb-1">Work_Duration</span>
+                            <span className="text-2xl font-black font-mono text-primary">{durationStr}</span>
+                        </div>
+                    )}
+
                     {isPastEleven && status === "idle" && (
                         <div className="warning-banner border border-destructive/30 bg-destructive/5 p-3 flex items-center gap-3 w-full">
                             <AlertCircle className="warning-icon text-destructive w-5 h-5 flex-shrink-0" />
-                            <p className="warning-message text-[11px] font-mono leading-tight text-destructive uppercase font-bold">
-                                Warning: Current time exceeds 11:00 AM limit. Points deduction active.
+                            <p className="warning-message text-[11px] font-mono leading-tight text-destructive uppercase font-bold text-center">
+                                Warning: 11:00 AM Limit Exceeded. Points Deduction Active.
                             </p>
                         </div>
                     )}
 
-                    <Button
-                        onClick={handleCheckIn}
-                        disabled={isLoading || status !== "idle"}
-                        className={`action-button-main w-full h-14 rounded-none font-black text-lg uppercase font-mono tracking-tight transition-all
-                            ${status === "idle" ? 'hover:bg-primary/90' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}
-                    >
-                        {status === "syncing" ? "Syncing_Status..." : (isLoading ? "Processing..." : status === "idle" ? "Initiate_Check_In" : "Checked_In")}
+                    {status === "idle" && (
+                        <Button
+                            onClick={handleCheckIn}
+                            disabled={isLoading}
+                            className="action-button-main w-full h-14 rounded-none font-black text-lg uppercase font-mono tracking-tight hover:bg-primary/90"
+                        >
+                            {isLoading ? "Processing..." : "Initiate_Check_In"}
+                        </Button>
+                    )}
 
-                    </Button>
+                    {(status === "present" || status === "late") && (
+                        <Button
+                            onClick={handleCheckOut}
+                            disabled={isLoading}
+                            className="action-button-main w-full h-14 rounded-none font-black text-lg uppercase font-mono tracking-tight bg-slate-900 hover:bg-slate-800 text-white"
+                        >
+                            {isLoading ? "Processing..." : "Initiate_Check_Out"}
+                        </Button>
+                    )}
+
+                    {status === "done" && (
+                        <Button
+                            disabled
+                            className="action-button-main w-full h-14 rounded-none font-black text-lg uppercase font-mono tracking-tight bg-slate-100 text-slate-400 border-2 border-slate-200"
+                        >
+                            Session_Closed
+                        </Button>
+                    )}
+
+                    {status === "syncing" && (
+                        <Button disabled className="w-full h-14 rounded-none font-mono text-slate-400 bg-slate-50">
+                            Syncing_Console...
+                        </Button>
+                    )}
 
                     <div className="footer-meta text-[9px] text-slate-400 font-mono uppercase font-bold tracking-tighter">
                         Log_ID: {Math.random().toString(36).substring(7).toUpperCase()} // System_Ready

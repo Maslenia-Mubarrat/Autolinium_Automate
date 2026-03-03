@@ -21,6 +21,42 @@ app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'Ok', message: 'Autolinium API is running' });
 });
 
+// --- Authentication: Login Route ---
+app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+    console.log("🔑 Auth: Login attempt for", email);
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { email: email }
+        });
+
+        if (!user || user.passwordHash !== password) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        // Return the user object (excluding the password for safety)
+        const { passwordHash, ...userWithoutPassword } = user;
+        res.status(200).json({
+            message: 'Login successful',
+            user: userWithoutPassword
+        });
+
+    } catch (error) {
+        console.error("Login server error:", error);
+        res.status(500).json({ error: 'Internal server error during login' });
+    }
+});
+
+
+
+
+
+
+
+
+
+
 //route to fetch users from database
 app.get('/api/users', async (req, res) => {
     try {
@@ -34,44 +70,40 @@ app.get('/api/users', async (req, res) => {
 
 
 // 3. New Attendance Check-In Route
-/*
-app.post('/api/attendance/check-out', async(req, res) =>
-{
-    const {userId = 1} = req.body;
+app.post('/api/attendance/check-in', async (req, res) => {
+    console.log("📣 Backend: Received Check-In request", req.body);
+    const { userId = 1 } = req.body;
 
-    //getting creent date in dhaka
+    // Use local office date (YYYY-MM-DD) for consistency
     const now = new Date();
-    const options: any = {timeZone:'Asia/Dhaka',
-                          year: 'numeric',
-                          month: '2-digit',
-                          day:'2-digit'
-                         };
-    const formatter = new Intl.DateTimeFormat('en-CA',options);
+    const options: any = { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' };
+    const formatter = new Intl.DateTimeFormat('en-CA', options);
     const localToday = new Date(formatter.format(now));
-    
-    try{
-        const record = await prisma.attendance.findFirst({
-            where: {userId: userId,
-                    recordDate: localToday
+
+    try {
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const isPastEleven = hours > 11 || (hours === 11 && minutes > 0);
+
+        const record = await prisma.attendance.create({
+            data: {
+                userId: userId,
+                recordDate: localToday, // Storing the local calendar day
+                entryTime: now,
+                presenceStatus: 'PRESENT',
+                lateStatus: isPastEleven ? 'LATE_AUTO' : 'TIMELY',
             }
         });
-        if(!record || !record.entryTime)
-        {
-            return res.status(404).json({error:'No active check-in found'});
-        }
-        //work duration calculation
-        const entryTime = new Date(record.entryTime);
-        const diffMs = now.getTime() - entryTime.getTime();
-        const workMinutes = Math.floor(diffMs/(1000*60));
 
-        //overtime calculation
-        const overtimeMinutes = Math.max(0,workMinutes-480);
-        const updated = await
-        
+        res.status(201).json({
+            message: 'Check-in successful',
+            data: record
+        });
+    } catch (error) {
+        console.error("Check-in Error:", error);
+        res.status(500).json({ error: 'Failed to log attendance' });
     }
-    catch(error){}
 });
-*/
 
 
 // 4. Get Today's Attendance Status (Multi-timezone safe)
@@ -158,6 +190,8 @@ app.get('/api/kpi/test', (req, res) => {
     res.json({ status: 'kpi routes are working' });
 });
 
+
+//KPI score route
 app.get('/api/kpi/status/:userId', async (req, res) => {
 
     const { userId } = req.params;
@@ -243,6 +277,8 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
 
 });
 
+
+
 // 1. Fetching all the tasks
 app.get('/api/tasks', async (req, res) => {
     try {
@@ -261,6 +297,8 @@ app.get('/api/tasks', async (req, res) => {
     }
 });
 
+
+
 // 2. Updating task status
 app.patch('/api/tasks/:id/status', async (req, res) => {
     const { id } = req.params;
@@ -277,6 +315,8 @@ app.patch('/api/tasks/:id/status', async (req, res) => {
         res.status(500).json({ error: 'failed to update' });
     }
 });
+
+
 //creating a new task
 app.post('/api/tasks', async (req, res) => {
     const { title, description, assigneeId } = req.body;
@@ -299,8 +339,10 @@ app.post('/api/tasks', async (req, res) => {
     }
 });
 
+
+
 //check out route ()
-/*
+
 app.post('/api/attendance/check-out', async (req, res) => {
     const { userId = 1 } = req.body;
 
@@ -333,12 +375,128 @@ app.post('/api/attendance/check-out', async (req, res) => {
         //overtime calculation
         const overtimeMinutes = Math.max(0, workMinutes - 480);
         const updated = await
-        
-    }
-    catch (error) { }
-});
-*/
+            prisma.attendance.update({
+                where: { id: record.id },
+                data: {
+                    exitTime: now,
+                    workMinutes: workMinutes,
+                    overtimeMinutes: overtimeMinutes
+                }
 
+            });
+        res.status(200).json({ message: 'Check-out successful', data: updated });
+
+
+    }
+    catch (error) {
+        console.error("Check out eror", error);
+        res.status(500).json({ error: 'Failed to log check out' });
+    }
+});
+
+
+//admin's late approval route
+app.patch('/api/attendance/approve-late/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const record = await
+            prisma.attendance.update({
+                where: { id: parseInt(id) },
+                data: {
+                    lateStatus: 'TIMELY',
+                    adminOverride: true
+
+                }
+
+            }
+
+
+            );
+        res.status(200).json({ message: 'Late arrival approved', data: record });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to approve late' });
+    }
+
+
+});
+
+// submitting new leave request
+app.post('/api/leave/request', async (req, res) => {
+    const { userId, startDate, endDate, reason } = req.body;
+    console.log(`Leave new request from user ${userId}`);
+    try {
+        const leave = await prisma.leaveRequest.create(
+            {
+                data: {
+                    userId: parseInt(userId),
+                    startDate: new Date(startDate),
+                    endDate: new Date(endDate),
+                    reason,
+                    status: 'PENDING'
+
+                }
+            }
+        );
+        res.status(201).json({ message: 'Leave request submitted', data: leave });
+
+    }
+    catch (error) {
+        console.error("Leaver request error:", error);
+        res.status(500).json({ error: 'failed to submit leave request' });
+
+    }
+});
+
+// getting all leave requests for admin
+app.get('/api/leave/all', async (req, res) => {
+    try {
+        const leaves = await prisma.leaveRequest.findMany({
+            include: { user: { select: { name: true, employeeId: true } } },
+            orderBy: { requestedAt: 'desc' }
+        });
+        res.status(200).json(leaves);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch leaves' });
+    }
+});
+
+
+// approving or rejecting a leave
+app.patch('/api/leave/:id/status', async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    try {
+        const leave = await prisma.leaveRequest.update(
+            {
+                where: { id: parseInt(id) },
+                data: { status }
+            }
+        );
+        res.status(200).json({ message: `leave ${status.toLowerCase()} successful`, data: leave });
+
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to update leave status' });
+    }
+});
+
+// 4. Get leave requests for a specific user (For Employee View)
+app.get('/api/leave/user/:userId', async (req, res) => {
+    const { userId } = req.params;
+    console.log(`🔍 Leave: Fetching history for user ${userId}`);
+    try {
+        const leaves = await prisma.leaveRequest.findMany({
+            where: { userId: parseInt(userId) },
+            orderBy: { requestedAt: 'desc' }
+        });
+        console.log(`✅ Leave: Found ${leaves.length} records for user ${userId}`);
+        res.status(200).json(leaves);
+    } catch (error) {
+        console.log(`❌ Leave: Error for user ${userId}`, error);
+        res.status(500).json({ error: 'Failed to fetch user leave requests' });
+    }
+});
 
 
 

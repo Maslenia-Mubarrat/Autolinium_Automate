@@ -1,13 +1,48 @@
 "use client"
 
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { useEffect, useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { SidebarProvider, SidebarTrigger } from "../ui/sidebar"
 import { AppSidebar } from "./AppSidebar"
 import { MobileNav } from "./MobileNav"
 import { useIsMobile } from "@/hooks/use-mobile"
 
+
 export function AppShell({ children }: { children: React.ReactNode }) {
     const isMobile = useIsMobile()
+    const pathname = usePathname()
+    const router = useRouter()
+    const [isAuthorized, setIsAutorized] = useState(false)
 
+    useEffect(() => {
+        const user = localStorage.getItem("user")
+        const isLoginPage = pathname === "/login"
+
+        if (!user && !isLoginPage) {
+            router.push("/login")
+        } else if (user && isLoginPage) {
+            router.push("/")
+        } else {
+            setIsAutorized(true)
+        }
+
+    }, [pathname, router])
+
+    const isLoginPage = pathname === "/login"
+    if (isLoginPage) {
+        return <div className="font-mono">{children}</div>
+    }
+    // if someone is in the login page, we will show the 
+    // login card without the sidebar/header
+
+    if (!isAuthorized) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center font-mono uppercase font-black text-primary">
+                Verifying_Credentials...
+            </div>
+        )
+    }
+    //otherwise shoing the full app with sidebar
     return (
         <SidebarProvider className="sidebar-state-context">
             <div className="app-shell-root flex min-h-screen w-full bg-white font-mono">
