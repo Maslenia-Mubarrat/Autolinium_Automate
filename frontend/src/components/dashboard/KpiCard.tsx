@@ -16,23 +16,26 @@ export function KpiCard() {
 
     useEffect(() => {
         const fetchKpiStatus = async () => {
+            // 1. Get user from storage
+            const userStr = localStorage.getItem("user");
+            if (!userStr) return;
+            const user = JSON.parse(userStr);
+
             try {
-                const response = await fetch('http://localhost:5000/api/kpi/status/1');
+                // 2. Use user.id instead of hardcoded 1
+                const response = await fetch(`http://localhost:5000/api/kpi/status/${user.id}`);
                 const result = await response.json();
 
                 if (response.ok) {
                     setKpiData(result)
                 }
-
-
             }
             catch (error) {
                 console.error("failed to fetch KPI status:", error);
-
             }
             finally { setIsLoading(false); }
-
         };
+
         fetchKpiStatus();
 
     }, [])

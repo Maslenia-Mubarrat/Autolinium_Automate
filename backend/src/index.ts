@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
+import { MeetingStatus, PrismaClient } from '@prisma/client';
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 
@@ -68,11 +68,32 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
+//  New route to get simplified user list for selection 
+app.get('/api/users/list', async (req, res) => {
+    try {
+        const users = await prisma.user.findMany({
+
+            // for now we are listing every employee, not filtering anyone,might need to filter later
+
+            select: {
+                id: true,
+                name: true,
+                employeeId: true
+            }
+        });
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch user list' });
+    }
+});
+
 
 // 3. New Attendance Check-In Route
 app.post('/api/attendance/check-in', async (req, res) => {
     console.log("📣 Backend: Received Check-In request", req.body);
-    const { userId = 1 } = req.body;
+    const { userId } = req.body;
+    if (!userId)
+        return res.status(400).json({ error: 'User ID is required for check-in' });
 
     // Use local office date (YYYY-MM-DD) for consistency
     const now = new Date();
@@ -91,6 +112,7 @@ app.post('/api/attendance/check-in', async (req, res) => {
                 recordDate: localToday, // Storing the local calendar day
                 entryTime: now,
                 presenceStatus: 'PRESENT',
+                locationMode: req.body.locationMode || 'OFFICE', // Safe fallback
                 lateStatus: isPastEleven ? 'LATE_AUTO' : 'TIMELY',
             }
         });
@@ -209,10 +231,23 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
     const monthEnd = new Date(year, month, 1);
 
     try {
+        // 1. Fetch attendance records
         const records = await prisma.attendance.findMany({
             where: {
                 userId: parseInt(userId),
                 recordDate: { gte: monthStart, lt: monthEnd }
+            }
+        });
+
+        // 2. Fetch approved leaves for this month
+        const approvedLeaves = await prisma.leaveRequest.findMany({
+            where: {
+                userId: parseInt(userId),
+                status: 'APPROVED',
+                OR: [
+                    { startDate: { gte: monthStart, lt: monthEnd } },
+                    { endDate: { gte: monthStart, lt: monthEnd } }
+                ]
             }
         });
 
@@ -221,16 +256,21 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
         const absentRecords = records.filter(r => r.presenceStatus === 'ABSENT');
 
         for (const record of absentRecords) {
-            if (record.absenceInfo === 'UNINFORMED') {
+            // Check if this specific day was covered by an approved leave
+            const isOnLeave = approvedLeaves.some(leave =>
+                record.recordDate >= leave.startDate && record.recordDate <= leave.endDate
+            );
+
+            if (isOnLeave) {
+                kpi1 -= 0; // Don't deduct anything!
+            } else if (record.absenceInfo === 'UNINFORMED') {
                 kpi1 -= 2;
-            } else if (record.absenceInfo === 'GRANTED') {
-                kpi1 -= 0;
             } else {
                 kpi1 -= 1;
             }
         }
 
-        // KPI 2: Timeliness (starts at 10)
+        // KPI 2: Timeliness (stays the same as before)
         let kpi2 = 10;
         const uninformedLateRecords = records.filter(r =>
             r.lateStatus === 'LATE_AUTO' || r.lateStatus === 'LATE_UNINFORMED'
@@ -248,7 +288,6 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
             }
         }
 
-        // Clamp both scores between 0 and 10 — OUTSIDE the loop
         kpi1 = Math.min(10, Math.max(0, kpi1));
         kpi2 = Math.min(10, Math.max(0, kpi2));
 
@@ -258,23 +297,36 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
             year,
             totalDaysLogged: records.length,
             absentDays: absentRecords.length,
-            uninformedLateDays: uninformedLateRecords.length,
+            approvedLeaveDays: approvedLeaves.length,
             kpi1Attendance: kpi1,
             kpi2Timeliness: kpi2,
-            totalSoFar: kpi1 + kpi2,
-            pending: [
-                "KPI2: Informed late with promiseTime — needs late approval system (Day 4)",
-                "KPI2: Granted late tracking — needs admin approval UI (Day 4)",
-                "KPI2: Overtime bonus — needs check-out system (Day 6)",
-                "KPI3-9 — future sprints"
-            ]
+            totalSoFar: kpi1 + kpi2
         });
+    }
 
-    } catch (error) {
+
+    catch (error) {
         console.error("KPI Error:", error);
         res.status(500).json({ error: "Failed to calculate KPI" });
     }
 
+});
+
+
+//this is for attendance history
+// Add this to backend/src/index.ts
+app.get('/api/attendance/user/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const records = await prisma.attendance.findMany({
+            where: { userId: parseInt(userId) },
+            orderBy: { recordDate: 'desc' },
+            take: 30 // Last 30 days
+        });
+        res.status(200).json(records);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch attendance history' });
+    }
 });
 
 
@@ -299,15 +351,19 @@ app.get('/api/tasks', async (req, res) => {
 
 
 
-// 2. Updating task status
+// 2. Updating task status: captured completion note and auto-calculates delay/completion time
 app.patch('/api/tasks/:id/status', async (req, res) => {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, completionNote } = req.body;
 
     try {
-        const updatedTask = await prisma.task.update({ // Use 'task' (Lowercase)
+        const updatedTask = await prisma.task.update({
             where: { id: parseInt(id) },
-            data: { status } // Use 'data' (not date)
+            data: {
+                status,
+                completionNote,
+                completedAt: status === 'DONE' ? new Date() : null
+            }
         });
         res.status(200).json(updatedTask);
     } catch (error) {
@@ -317,15 +373,16 @@ app.patch('/api/tasks/:id/status', async (req, res) => {
 });
 
 
-//creating a new task
+// 3. Creating a new task: validates assignee and sets the deadline for KPI tracking
 app.post('/api/tasks', async (req, res) => {
-    const { title, description, assigneeId } = req.body;
+    const { title, description, assigneeId, deadline } = req.body;
     try {
         const newTask = await prisma.task.create({
             data: {
                 title: title,
                 description: description,
-                assigneeId: parseInt(assigneeId)
+                assigneeId: parseInt(assigneeId),
+                deadline: deadline ? new Date(deadline) : new Date()
             }
 
         });
@@ -339,12 +396,31 @@ app.post('/api/tasks', async (req, res) => {
     }
 });
 
+// Fetch tasks for a specific user
+app.get('/api/tasks/user/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const tasks = await prisma.task.findMany({
+            where: { assigneeId: parseInt(userId) },
+            include: { assignee: { select: { name: true } } },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.status(200).json(tasks);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch user tasks" });
+    }
+});
+
+
 
 
 //check out route ()
 
 app.post('/api/attendance/check-out', async (req, res) => {
-    const { userId = 1 } = req.body;
+    const { userId } = req.body;
+    if (!userId)
+        return res.status(400).json({ error: 'User ID is required for check-out' });
+
 
     //getting creent date in dhaka
     const now = new Date();
@@ -495,6 +571,200 @@ app.get('/api/leave/user/:userId', async (req, res) => {
     } catch (error) {
         console.log(`❌ Leave: Error for user ${userId}`, error);
         res.status(500).json({ error: 'Failed to fetch user leave requests' });
+    }
+});
+
+// Meeting tracking starts from here
+
+//  Update Internal Meeting Route (Fixing Status) ---
+app.post('/api/meetings/internal', async (req, res) => {
+    const { name, meetingDate, agenda, createdBy, attendeeIds } = req.body;
+    try {
+        const meeting = await prisma.internalMeeting.create({
+            data: {
+                name,
+                meetingDate: new Date(meetingDate),
+                agenda,
+                createdBy: parseInt(createdBy),
+                attendees: {
+                    create: attendeeIds.map((uid: number) => ({
+                        userId: uid,
+                        status: 'UNINFORMED_SKIP' // Changed from ATTENDED so employees can confirm
+                    }))
+                }
+            },
+            include: { attendees: true }
+        });
+        res.status(201).json(meeting);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create internal meeting' });
+    }
+});
+// Update Client Meeting Route (Fixing Status) ---
+app.post('/api/meetings/client', async (req, res) => {
+    const { clientName, scheduledTime, createdBy, attendeeIds } = req.body;
+    try {
+        const meeting = await prisma.clientMeeting.create({
+            data: {
+                clientName,
+                scheduledTime: new Date(scheduledTime),
+                createdBy: parseInt(createdBy),
+                attendees: {
+                    create: attendeeIds.map((uid: number) => ({
+                        userId: uid,
+                        status: 'UNINFORMED_SKIP' // Changed from ATTENDED
+                    }))
+                }
+            },
+            include: { attendees: true }
+        });
+        res.status(201).json(meeting);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create client meeting' });
+    }
+});
+
+
+//get user meetings for dashboard (employee)
+app.get('/api/meetings/user/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    try {
+        const internal = await prisma.internalMeeting.findMany({
+            where: {
+                meetingDate: { gte: today },
+                attendees: { some: { userId: parseInt(userId) } }
+
+            },
+            include: { attendees: { where: { userId: parseInt(userId) } } }
+        }
+
+        );
+
+        const client = await prisma.clientMeeting.findMany(
+            {
+                where:
+                {
+                    scheduledTime: { gte: today },
+                    attendees: { some: { userId: parseInt(userId) } }
+
+                },
+                include: { attendees: { where: { userId: parseInt(userId) } } }
+
+            }
+        );
+        res.status(200).json({ internal, client });
+
+
+    }
+    catch (error) {
+        res.status(500).json({ error: 'failed to fetch user meetings' });
+    }
+});
+
+// employee confirms attending an internal meeting
+app.patch(
+    '/api/meetings/internal/:meetingId/attend',
+    async (req, res) => {
+        const { meetingId } = req.params;
+        const { userId } = req.body;
+        try {
+            await prisma.internalMeetingAttendee.update(
+                {// the composite id wiill
+                    //be used, defined in schema
+                    where:
+                    {
+                        meetingId_userId:
+                        {
+                            meetingId: parseInt(meetingId),
+                            userId: parseInt(userId)
+                        }
+                    },
+                    data: { status: 'ATTENDED' }
+
+                }
+            );
+            res.status(200).json({ message: 'Attendance confirmed' });
+        }
+        catch (error) {
+            console.error("Attendance Error:", error);
+            res.status(500).json({ error: 'Failed to confirm attendacne' });
+        }
+
+    }
+);
+
+// employee confirms attending a client meeting
+app.patch(
+    '/api/meetings/client/:meetingId/join',
+    async (req, res) => {
+        const { meetingId } = req.params;
+        const { userId } = req.body;
+
+        try {
+            await prisma.clientMeetingAttendee.update(
+                {
+                    where:
+                    {
+                        meetingId_userId:
+                        {
+                            meetingId: parseInt(meetingId),
+                            userId: parseInt(userId)
+                        }
+                    },
+                    data:
+                    {
+                        joinTime: new Date(),
+                        //auto logs right now
+                        status: 'ATTENDED'
+                    }
+                }
+            );
+            res.status(200).json({ message: 'Join time logged' });
+        }
+        catch (error) {
+            res.status(500).json({ error: 'Failed to log join time' });
+        }
+    }
+);
+
+//  Admin View See ALL meetings and ALL attendee statuses
+app.get('/api/meetings/admin/all', async (req, res) => {
+    try {
+        const internal = await prisma.internalMeeting.findMany({
+            include: {
+                attendees: { include: { user: { select: { name: true, employeeId: true } } } }
+            },
+            orderBy: { meetingDate: 'desc' }
+        });
+
+        const client = await prisma.clientMeeting.findMany({
+            include: {
+                attendees: { include: { user: { select: { name: true, employeeId: true } } } }
+            },
+            orderBy: { scheduledTime: 'desc' }
+        });
+
+        res.status(200).json({ internal, client });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch all meetings' });
+    }
+});
+
+//  Admin view to  See ALL tasks across the entire office 
+app.get('/api/tasks/admin/all', async (req, res) => {
+    try {
+        const tasks = await prisma.task.findMany({
+            include: {
+                assignee: { select: { id: true, name: true, employeeId: true } }
+            },
+            orderBy: { deadline: 'asc' }
+        });
+        res.status(200).json(tasks);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch all tasks' });
     }
 });
 

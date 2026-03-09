@@ -40,6 +40,7 @@ model Attendance {
   workMinutes     Int            @default(0)
   overtimeMinutes Int            @default(0)
   adminOverride   Boolean        @default(false)
+  locationMode    LocationMode   @default(OFFICE)
   user            User           @relation(fields: [userId], references: [id])
 }
 
@@ -158,8 +159,11 @@ model Task {
   description String?
   status      String   @default("PENDING")
   createdAt   DateTime @default(now())
-  assigneeId  Int
-  assignee    User     @relation(fields: [assigneeId], references: [id])
+  deadline       DateTime @default(now())
+  completedAt    DateTime?
+  completionNote String?
+  assigneeId     Int
+  assignee       User     @relation(fields: [assigneeId], references: [id])
 }
 
 enum Role {
@@ -201,4 +205,9 @@ enum MeetingStatus {
 enum TaskStatus {
   PENDING
   DONE
+}
+
+enum LocationMode {
+  OFFICE
+  HOME
 }

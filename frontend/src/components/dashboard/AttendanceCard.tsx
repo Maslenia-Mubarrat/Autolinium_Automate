@@ -13,6 +13,8 @@ export function AttendanceCard() {
     const [isLoading, setIsLoading] = useState(false);
     const [entryTime, setEntryTime] = useState<Date | null>(null);
     const [exitTime, setExitTime] = useState<Date | null>(null);
+    const [isHomeOffice, setIsHomeOffice] = useState(false);
+
 
     // 2. Heartbeat (1000ms)
     useEffect(() => {
@@ -81,7 +83,11 @@ export function AttendanceCard() {
             const response = await fetch('http://localhost:5000/api/attendance/check-in', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.id })
+                body: JSON.stringify({
+                    userId: user.id,
+                    locationMode: isHomeOffice ? 'HOME' : 'OFFICE'
+                })
+
             });
             if (response.ok) {
                 await checkStatus();
@@ -172,14 +178,39 @@ export function AttendanceCard() {
                     )}
 
                     {status === "idle" && (
-                        <Button
-                            onClick={handleCheckIn}
-                            disabled={isLoading}
-                            className="action-button-main w-full h-14 rounded-none font-black text-lg uppercase font-mono tracking-tight hover:bg-primary/90"
-                        >
-                            {isLoading ? "Processing..." : "Initiate_Check_In"}
-                        </Button>
+                        <>
+                            <div className="flex items-center justify-between w-full p-3 border-2 border-slate-100 bg-slate-50 mb-4 transition-all hover:border-primary/30">
+                                <span className="text-[10px] font-mono font-black uppercase text-slate-500">Working_From:</span>
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant={!isHomeOffice ? "default" : "outline"}
+                                        size="sm"
+                                        className="h-7 text-[9px] rounded-none font-bold font-mono"
+                                        onClick={() => setIsHomeOffice(false)}
+                                    >
+                                        🏢_OFFICE
+                                    </Button>
+                                    <Button
+                                        variant={isHomeOffice ? "default" : "outline"}
+                                        size="sm"
+                                        className="h-7 text-[9px] rounded-none font-bold font-mono"
+                                        onClick={() => setIsHomeOffice(true)}
+                                    >
+                                        🏠_HOME
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <Button
+                                onClick={handleCheckIn}
+                                disabled={isLoading}
+                                className="action-button-main w-full h-14 rounded-none font-black text-lg uppercase font-mono tracking-tight hover:bg-primary/90"
+                            >
+                                {isLoading ? "Processing..." : "Initiate_Check_In"}
+                            </Button>
+                        </>
                     )}
+
 
                     {(status === "present" || status === "late") && (
                         <Button

@@ -28,6 +28,11 @@ const items = [
         icon: Users,
     },
     {
+        title: "My Attendance", // Add this!
+        url: "/my-attendance",
+        icon: Calendar,
+    },
+    {
         title: "Meetings",
         url: "/meetings",
         icon: Calendar,
@@ -87,12 +92,20 @@ export function AppSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
-
-            <SidebarFooter className="sidebar-footer-info border-t-2 border-primary p-4 text-slate-400">
-                <span className="version-tag font-mono text-[10px] upprcase font-bold tracking-tighter">
+            <SidebarFooter className="sidebar-footer-info border-t-2 border-primary p-4 flex flex-col gap-4">
+                <button
+                    onClick={() => { localStorage.removeItem("user"); window.location.href = "/login"; }}
+                    className="flex items-center gap-3 text-slate-400 hover:text-red-500 transition-colors font-mono font-bold uppercase text-[10px]"
+                >
+                    <LogOut className="w-4 h-4" />
+                    Log_Out_Session
+                </button>
+                <span className="version-tag font-mono text-[10px] uppercase font-bold tracking-tighter">
                     Ver_1.0// Auth_Ready
                 </span>
             </SidebarFooter>
+
+
         </Sidebar>
 
 

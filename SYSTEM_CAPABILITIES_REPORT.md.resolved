@@ -1,0 +1,39 @@
+# 📋 Autolinium: Current Functional Capability Report
+**Date:** March 3, 2026
+**Status:** Alpha Production Ready (Internal)
+
+This report outlines the "Live" features currently integrated and functional within the Autolinium ecosystem.
+
+---
+
+### 🛡️ 1. Security & Identity Management
+*   **Encrypted Authentication:** A secure login system that distinguishes between **ADMIN** (Management) and **EMPLOYEE** (Staff).
+*   **Protected Environments:** All project data and tools are gated; the system prevents unauthorized access to management boards.
+*   **Session Persistence:** The software remembers the logged-in user, even after page refreshes, maintaining a seamless workflow.
+
+### ⏱️ 2. Attendance & Workforce Tracking
+*   **Digital Attendance Console:** Employees can initiate and close their shifts with a single tap.
+*   **Real-time Duration Tracking:** Automated workday timer that calculates work minutes and overtime accurately.
+*   **Smart Late Alerts:** System automatically flags late arrivals (post-11:00 AM) and triggers performance alerts.
+*   **Location Awareness:** Supports toggling between "On Office" and "Home Office" for flexible work logging.
+
+### 🌴 3. HR & Leave Management
+*   **Employee Leave Portal:** A fully digital submission system where employees can request days off and provide reasons.
+*   **Management Dashboard:** A centralized cockpit for the boss/admin to review, approve, or reject leave requests instantly.
+*   **Live History Sync:** Employees can see their leave history and live approval status (Pending/Approved/Rejected) without manual follow-up.
+
+### 📈 4. Performance & KPI Engine (Backend)
+*   **Automated KPI 1 (Attendance):** System automatically calculates monthly scores based on presence records.
+*   **Automated KPI 2 (Timeliness):** Advanced logic that monitors late minutes and calculates deductions in 30-minute blocks.
+*   **Transparency Dashboard:** Employees can see their live KPI scorecards, fostering professional accountability.
+
+### 📝 5. Operational Task Board
+*   **Workflow Distribution:** Admin can create and assign specific tasks with deadlines.
+*   **Completion Tracking:** Employees can mark tasks as "Done" digitally, creating a verifiable audit trail for productivity.
+
+### 🗓️ 6. Meeting Framework (Alpha Phase)
+*   **Internal & Client Infrastructure:** Database and server-side routes are ready to track attendee participation and "Informed vs. Uninformed" skips.
+
+---
+
+**Summary Impact:** The system has successfully transitioned from a manual tracking approach to a **data-driven management environment** where employee accountability is tracked in real-time.
