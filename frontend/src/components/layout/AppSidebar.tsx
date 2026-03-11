@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Users, Calendar, CheckSquare, ClipboardList, LogOut } from "lucide-react"
+import { Home, Users, Calendar, CheckSquare, ClipboardList, LogOut, Star } from "lucide-react"
 
 import {
     Sidebar,
@@ -44,8 +44,13 @@ const items = [
     },
     {
         title: "Weekly Reports",
-        url: "/reports",
+        url: "/weekly-report",
         icon: ClipboardList,
+    },
+    {
+        title: "Peer Review",
+        url: "/peer-review",
+        icon: Star
     }
 ]
 

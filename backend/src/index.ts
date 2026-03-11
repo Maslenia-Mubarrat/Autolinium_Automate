@@ -314,7 +314,7 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
 
 
 //this is for attendance history
-// Add this to backend/src/index.ts
+
 app.get('/api/attendance/user/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
@@ -371,6 +371,30 @@ app.patch('/api/tasks/:id/status', async (req, res) => {
         res.status(500).json({ error: 'failed to update' });
     }
 });
+
+// --- Task Review Engine (Admin Only) ---
+app.patch('/api/tasks/:id/review', async (req, res) => {
+    const taskId = parseInt(req.params.id);
+    const { reviewScore, managerComment } = req.body;
+
+    try {
+        const updatedTask = await prisma.task.update({
+            where: { id: taskId },
+            data: {
+                reviewScore: parseInt(reviewScore),
+                managerComment: managerComment,
+            },
+            include: { assignee: true }
+        });
+
+        console.log(`⭐ Task ${taskId} reviewed with score: ${reviewScore}`);
+        res.json(updatedTask);
+    } catch (error) {
+        console.error("Error saving task review:", error);
+        res.status(500).json({ error: "Failed to save review" });
+    }
+});
+
 
 
 // 3. Creating a new task: validates assignee and sets the deadline for KPI tracking
@@ -768,8 +792,86 @@ app.get('/api/tasks/admin/all', async (req, res) => {
     }
 });
 
+// === PEER REVIEW SYSTEM ===
 
-
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+app.post('/api/peer-review', async (req, res) => {
+    const { reviewerId, targetUserId, month, year, respectScore, helpfulnessScore, attitudeScore, conflictScore, knowledgeShareScore } = req.body;
+    try {
+        const averageScore = (respectScore + helpfulnessScore + attitudeScore + conflictScore + knowledgeShareScore) / 5;
+        const review = await prisma.peerReview.create({
+            data: {
+                reviewerId: parseInt(reviewerId), targetUserId: parseInt(targetUserId),
+                month: parseInt(month), year: parseInt(year),
+                respectScore: parseInt(respectScore), helpfulnessScore: parseInt(helpfulnessScore),
+                attitudeScore: parseInt(attitudeScore), conflictScore: parseInt(conflictScore),
+                knowledgeShareScore: parseInt(knowledgeShareScore), averageScore
+            }
+        });
+        res.status(201).json(review);
+    } catch (error) { res.status(500).json({ error: 'Failed to submit peer review' }); }
 });
+
+app.get('/api/peer-review/received/:userId', async (req, res) => {
+    const userId = parseInt(req.params.userId);
+    try {
+        const reviews = await prisma.peerReview.findMany({
+            where: { targetUserId: userId },
+            include: { reviewer: { select: { name: true, employeeId: true } } },
+            orderBy: { year: 'desc' }
+        });
+        res.json(reviews);
+    } catch (error) { res.status(500).json({ error: 'Failed to fetch peer reviews' }); }
+});
+
+app.get('/api/peer-review/all', async (req, res) => {
+    try {
+        const reviews = await prisma.peerReview.findMany({
+            include: {
+                reviewer: { select: { name: true, employeeId: true } },
+                targetUser: { select: { name: true, employeeId: true } }
+            },
+            orderBy: { year: 'desc' }
+        });
+        res.json(reviews);
+    } catch (error) { res.status(500).json({ error: 'Failed to fetch all peer reviews' }); }
+});
+
+// === WEEKLY REPORT SYSTEM ===
+
+app.post('/api/weekly-report', async (req, res) => {
+    const { userId, weekStartDate, content } = req.body;
+    try {
+        const report = await prisma.weeklyReport.create({
+            data: { userId: parseInt(userId), weekStartDate: new Date(weekStartDate), content }
+        });
+        res.status(201).json(report);
+    } catch (error) { res.status(500).json({ error: 'Failed to submit weekly report' }); }
+});
+
+app.get('/api/weekly-report/user/:userId', async (req, res) => {
+    const userId = parseInt(req.params.userId);
+    try {
+        const reports = await prisma.weeklyReport.findMany({ where: { userId }, orderBy: { weekStartDate: 'desc' } });
+        res.json(reports);
+    } catch (error) { res.status(500).json({ error: 'Failed to fetch weekly reports' }); }
+});
+
+app.get('/api/weekly-report/all', async (req, res) => {
+    try {
+        const reports = await prisma.weeklyReport.findMany({
+            include: { user: { select: { name: true, employeeId: true } } },
+            orderBy: { weekStartDate: 'desc' }
+        });
+        res.json(reports);
+    } catch (error) { res.status(500).json({ error: 'Failed to fetch all weekly reports' }); }
+});
+
+
+
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
+export default app;
+

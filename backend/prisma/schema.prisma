@@ -154,16 +154,18 @@ model MonthlyKPI {
 }
 
 model Task {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String?
-  status      String   @default("PENDING")
-  createdAt   DateTime @default(now())
-  deadline       DateTime @default(now())
+  id             Int       @id @default(autoincrement())
+  title          String
+  description    String?
+  status         String    @default("PENDING")
+  createdAt      DateTime  @default(now())
+  deadline       DateTime  @default(now())
   completedAt    DateTime?
   completionNote String?
   assigneeId     Int
-  assignee       User     @relation(fields: [assigneeId], references: [id])
+  assignee       User      @relation(fields: [assigneeId], references: [id])
+  reviewScore    Int?
+  managerComment String?
 }
 
 enum Role {
