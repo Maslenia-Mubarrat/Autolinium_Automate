@@ -17,7 +17,7 @@ export default function WeeklyReportPage() {
     const [reports, setReports] = useState<WeeklyReport[]>([]);
 
     const fetchReports = (user: any, admin: boolean) => {
-        const url = admin ? "http://localhost:5000/api/weekly-report/all" : `http://localhost:5000/api/weekly-report/user/${user.id}`;
+        const url = admin ? "https://autolinium-automate-vgk4.vercel.app/api/weekly-report/all" : `https://autolinium-automate-vgk4.vercel.app/api/weekly-report/user/${user.id}`;
         fetch(url).then(r => r.json()).then(setReports);
     };
 
@@ -35,7 +35,7 @@ export default function WeeklyReportPage() {
     const handleSubmit = async () => {
         if (!content.trim() || !weekStartDate) return alert("Please fill in all fields.");
         setSubmitting(true);
-        await fetch("http://localhost:5000/api/weekly-report", {
+        await fetch("https://autolinium-automate-vgk4.vercel.app/api/weekly-report", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId: currentUser?.id, weekStartDate, content })

@@ -55,7 +55,7 @@ Learn how to use "Conditional Rendering" to show the Admin Sidebar for admins an
 Learn how to connect your Next.js frontend to your Express backend.
 
 * **Concepts:** `fetch` API, `useEffect`, Client vs Server components.
-* **Your Task:** Create a page that calls `http://localhost:5000/api/users` and displays your email in a beautiful Shadcn Card.
+* **Your Task:** Create a page that calls `https://autolinium-automate-vgk4.vercel.app/api/users` and displays your email in a beautiful Shadcn Card.
 
 ---
 

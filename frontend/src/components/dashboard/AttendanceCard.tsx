@@ -34,7 +34,7 @@ export function AttendanceCard() {
 
         try {
             //second thing- we will now use user.id
-            const response = await fetch(`http://localhost:5000/api/attendance/status/${user.id}`);
+            const response = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/attendance/status/${user.id}`);
             const result = await response.json();
 
             if (result.checkedIn) {
@@ -80,7 +80,7 @@ export function AttendanceCard() {
         const user = JSON.parse(userStr);
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:5000/api/attendance/check-in', {
+            const response = await fetch('https://autolinium-automate-vgk4.vercel.app/api/attendance/check-in', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -106,7 +106,7 @@ export function AttendanceCard() {
         const user = JSON.parse(userStr);
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:5000/api/attendance/check-out', {
+            const response = await fetch('https://autolinium-automate-vgk4.vercel.app/api/attendance/check-out', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: user.id })

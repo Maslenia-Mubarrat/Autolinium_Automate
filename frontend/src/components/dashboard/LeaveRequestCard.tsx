@@ -23,7 +23,7 @@ export function LeaveRequestCard() {
         const user = JSON.parse(userStr)
 
         try {
-            const res = await fetch(`http://localhost:5000/api/leave/user/${user.id}`)
+            const res = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/leave/user/${user.id}`)
             const data = await res.json()
             if (res.ok) setUserLeaves(data)
         } catch (err) {
@@ -49,7 +49,7 @@ export function LeaveRequestCard() {
 
         try {
             const res = await
-                fetch("http://localhost:5000/api/leave/request", {
+                fetch("https://autolinium-automate-vgk4.vercel.app/api/leave/request", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -164,8 +164,8 @@ export function LeaveRequestCard() {
                                             </div>
                                         </div>
                                         <Badge className={`rounded-none font-mono text-[8px] uppercase border px-1 h-4 ${leave.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                                                leave.status === 'REJECTED' ? 'bg-red-50 text-red-600 border-red-200' :
-                                                    'bg-amber-50 text-amber-600 border-amber-200'
+                                            leave.status === 'REJECTED' ? 'bg-red-50 text-red-600 border-red-200' :
+                                                'bg-amber-50 text-amber-600 border-amber-200'
                                             }`}>
                                             {leave.status}
                                         </Badge>

@@ -26,7 +26,7 @@ export default function AdminLeavePage() {
     const fetchLeaves = async () => {
         try {
             const res = await
-                fetch("http://localhost:5000/api/leave/all")
+                fetch("https://autolinium-automate-vgk4.vercel.app/api/leave/all")
             const data = await res.json()
             if (res.ok) setLeaves(data)
         }
@@ -42,7 +42,7 @@ export default function AdminLeavePage() {
     const handleAction = async (id: number, status: "APPROVED" | "REJECTED") => {
         try {
             const res = await
-                fetch(`http://localhost:5000/api/leave/${id}/status`, {
+                fetch(`https://autolinium-automate-vgk4.vercel.app/api/leave/${id}/status`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ status })

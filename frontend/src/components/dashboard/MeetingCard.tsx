@@ -20,7 +20,7 @@ export function MeetingCard() {
         const user = JSON.parse(userStr);
         try {
             const response = await
-                fetch(`http://localhost:5000/api/meetings/user/${user.id}`);
+                fetch(`https://autolinium-automate-vgk4.vercel.app/api/meetings/user/${user.id}`);
             const data = await response.json();
             setMeetings(data);
         }
@@ -48,7 +48,7 @@ export function MeetingCard() {
 
         try {
             const response = await
-                fetch(`http://localhost:5000/api/meetings/${endpoint}`,
+                fetch(`https://autolinium-automate-vgk4.vercel.app/api/meetings/${endpoint}`,
                     {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },

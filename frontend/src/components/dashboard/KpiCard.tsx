@@ -23,7 +23,7 @@ export function KpiCard() {
 
             try {
                 // 2. Use user.id instead of hardcoded 1
-                const response = await fetch(`http://localhost:5000/api/kpi/status/${user.id}`);
+                const response = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/kpi/status/${user.id}`);
                 const result = await response.json();
 
                 if (response.ok) {

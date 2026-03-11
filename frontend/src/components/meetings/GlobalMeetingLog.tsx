@@ -9,7 +9,7 @@ export function GlobalMeetingLog() {
     const [meetings, setMeetings] = useState<any>(null);
 
     const fetchAll = () => {
-        fetch('http://localhost:5000/api/meetings/admin/all')
+        fetch('https://autolinium-automate-vgk4.vercel.app/api/meetings/admin/all')
             .then(res => res.json())
             .then(data => setMeetings(data));
     };

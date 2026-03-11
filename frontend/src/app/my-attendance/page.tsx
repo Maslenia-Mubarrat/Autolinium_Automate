@@ -17,7 +17,7 @@ export default function MyAttendancePage() {
 
             try {
                 // We'll reuse the attendance check route but for all history
-                const response = await fetch(`http://localhost:5000/api/attendance/user/${user.id}`)
+                const response = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/attendance/user/${user.id}`)
                 const data = await response.json()
                 setHistory(data)
             } catch (error) {

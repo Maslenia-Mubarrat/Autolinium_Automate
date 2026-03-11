@@ -1005,7 +1005,7 @@ export function AttendanceCard() {
     useEffect(() => {
         const checkStatus = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/attendance/status/1');
+                const response = await fetch('https://autolinium-automate-vgk4.vercel.app/api/attendance/status/1');
                 const result = await response.json();
 ```
 
@@ -1051,7 +1051,7 @@ export function AttendanceCard() {
 
 ```typescript
         try {
-            const response = await fetch('http://localhost:5000/api/attendance/check-in', {
+            const response = await fetch('https://autolinium-automate-vgk4.vercel.app/api/attendance/check-in', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: 1 })

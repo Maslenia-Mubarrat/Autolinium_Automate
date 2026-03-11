@@ -23,7 +23,7 @@ export function AdminCommandBoard() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        fetch('http://localhost:5000/api/users/list')
+        fetch('https://autolinium-automate-vgk4.vercel.app/api/users/list')
             .then(res => res.json())
             .then(data => setStaff(data));
     }, []);
@@ -58,7 +58,7 @@ export function AdminCommandBoard() {
         };
 
         try {
-            const res = await fetch(`http://localhost:5000/api/meetings/${endpoint}`, {
+            const res = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/meetings/${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

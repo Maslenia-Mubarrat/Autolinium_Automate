@@ -8,7 +8,7 @@ export function GlobalTaskLog() {
     const [tasks, setTasks] = useState<any[]>([]);
 
     const fetchTasks = () => {
-        fetch('http://localhost:5000/api/tasks/admin/all')
+        fetch('https://autolinium-automate-vgk4.vercel.app/api/tasks/admin/all')
             .then(res => res.json())
             .then(data => setTasks(data));
     };
@@ -35,7 +35,7 @@ export function GlobalTaskLog() {
         if (comment === null) return;
 
         try {
-            const response = await fetch(`http://localhost:5000/api/tasks/${taskId}/review`, {
+            const response = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/tasks/${taskId}/review`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -102,7 +102,7 @@ export function GlobalTaskLog() {
                                                         onClick={() => handleReviewTask(task.id)}
                                                         className="text-[9px] bg-cyan-50 hover:bg-cyan-100 text-cyan-600 border border-cyan-300 px-2 py-0.5 rounded transition-colors font-bold uppercase"
                                                     >
-                                                        Review
+                                                        Review is saved
                                                     </button>
                                                 )
                                             )}
