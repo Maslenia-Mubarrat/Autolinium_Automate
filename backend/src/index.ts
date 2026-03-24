@@ -254,6 +254,7 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
         // KPI 1: Attendance (starts at 10)
         let kpi1 = 10;
         const absentRecords = records.filter(r => r.presenceStatus === 'ABSENT');
+        let grantedLeaveDays = 0;
 
         for (const record of absentRecords) {
             // Check if this specific day was covered by an approved leave
@@ -262,7 +263,14 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
             );
 
             if (isOnLeave) {
-                kpi1 -= 0; // Don't deduct anything!
+                {
+                    grantedLeaveDays++;
+                    if (grantedLeaveDays > 3) {
+                        kpi1 -= 0.5;
+                    }
+                }
+
+
             } else if (record.absenceInfo === 'UNINFORMED') {
                 kpi1 -= 2;
             } else {
@@ -270,27 +278,85 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
             }
         }
 
-        // KPI 2: Timeliness (stays the same as before)
+        // KPI 2: Timeliness (starts at 10)
         let kpi2 = 10;
-        const uninformedLateRecords = records.filter(r =>
-            r.lateStatus === 'LATE_AUTO' || r.lateStatus === 'LATE_UNINFORMED'
-        );
+        let grantedLateDays = 0;
 
-        for (const record of uninformedLateRecords) {
-            if (record.entryTime && record.recordDate) {
-                const recordDateUTC = new Date(record.recordDate);
-                const officeOpenUTC = new Date(recordDateUTC.getTime() + 5 * 60 * 60 * 1000);
-                const entryUTC = new Date(record.entryTime);
+        const lateRecords = records.filter(r => r.lateStatus !== 'TIMELY');
+
+        for (const record of lateRecords) {
+            if (!record.entryTime || !record.recordDate) continue;
+
+            // Office time starts at 11:00 AM local time
+            const recordDateUTC = new Date(record.recordDate);
+            const officeOpenUTC = new Date(recordDateUTC.getTime() + 5 * 60 * 60 * 1000);
+            const entryUTC = new Date(record.entryTime);
+
+            // 1. Granted Late (using new LATE_GRANTED enum)
+            if (record.lateStatus === 'LATE_GRANTED') {
+                grantedLateDays++;
+                if (grantedLateDays > 4) {
+                    kpi2 -= 0.5; // -0.5 per day after 4th request
+                }
+            }
+            // 2. Uninformed Late (or Auto Late)
+            else if (record.lateStatus === 'LATE_AUTO' || record.lateStatus === 'LATE_UNINFORMED') {
                 const lateMs = Math.max(0, entryUTC.getTime() - officeOpenUTC.getTime());
                 const lateMinutes = lateMs / (1000 * 60);
-                const deduction = Math.floor(lateMinutes / 30) * 0.25;
-                kpi2 -= deduction;
+                if (lateMinutes > 0) {
+                    const deduction = Math.floor(lateMinutes / 30) * 0.25;
+                    kpi2 -= deduction;
+                }
+            }
+            // 3. Informed Late (Arrive after promised time)
+            else if (record.lateStatus === 'LATE_INFORMED' && record.promiseTime) {
+                const promiseUTC = new Date(record.promiseTime);
+                const lateMs = Math.max(0, entryUTC.getTime() - promiseUTC.getTime());
+                const lateMinutes = lateMs / (1000 * 60);
+                if (lateMinutes > 0) {
+                    const deduction = Math.floor(lateMinutes / 10) * 0.25;
+                    kpi2 -= deduction;
+                }
+            }
+        }
+
+        // Overtime Bonus (After 8 hours/480 mins, +0.25 every 30 mins)
+        for (const record of records) {
+            if (record.workMinutes > 480) {
+                const overtimeMins = record.workMinutes - 480;
+                const bonus = Math.floor(overtimeMins / 30) * 0.25;
+                kpi2 += bonus;
+            }
+        }
+        // Make sure scores never go below 0 or above 10
+
+
+        // KPI 3: Internal Meetings (starts at 10)
+        let kpi3 = 10;
+        const internalMeetings = await prisma.internalMeetingAttendee.findMany({
+            where: {
+                userId: parseInt(userId),
+                meeting: {
+                    meetingDate: { gte: monthStart, lt: monthEnd }
+                }
+            }
+        });
+
+        for (const attendance of internalMeetings) {
+            if (attendance.status === 'INFORMED_SKIP') {
+                kpi3 -= 1;
+            } else if (attendance.status === 'UNINFORMED_SKIP') {
+                kpi3 -= 2; // The PRD says "-2 total" which means a steeper penalty per skip
             }
         }
 
         kpi1 = Math.min(10, Math.max(0, kpi1));
         kpi2 = Math.min(10, Math.max(0, kpi2));
+        kpi3 = Math.min(10, Math.max(0, kpi3));
 
+
+
+        // Send data back to the frontend
         res.status(200).json({
             userId: parseInt(userId),
             month,
@@ -300,8 +366,11 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
             approvedLeaveDays: approvedLeaves.length,
             kpi1Attendance: kpi1,
             kpi2Timeliness: kpi2,
-            totalSoFar: kpi1 + kpi2
+            kpi3InternalMeetings: kpi3,
+            totalSoFar: kpi1 + kpi2 + kpi3
         });
+
+
     }
 
 

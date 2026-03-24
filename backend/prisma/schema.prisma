@@ -25,6 +25,7 @@ model User {
   assignedTasks            ProjectTask[]             @relation("AssignedTasks")
   tasks                    Task[]
   weeklyReports            WeeklyReport[]
+  payrollRecords           Payroll[]
 }
 
 model Attendance {
@@ -153,6 +154,22 @@ model MonthlyKPI {
   user                 User  @relation(fields: [userId], references: [id])
 }
 
+model Payroll {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  month        Int
+  year         Int
+  baseSalary   Float
+  kpiBonus     Float
+  finalPayout  Float
+  status       String    @default("PENDING") // PENDING, PAID
+  processedAt  DateTime?
+  user         User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, month, year])
+}
+
+
 model Task {
   id             Int       @id @default(autoincrement())
   title          String
@@ -190,6 +207,7 @@ enum LateStatus {
   LATE_AUTO
   LATE_INFORMED
   LATE_UNINFORMED
+  LATE_GRANTED
 }
 
 enum LeaveStatus {

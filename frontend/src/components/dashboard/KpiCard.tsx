@@ -8,7 +8,9 @@ import { Target, Activity, AlertCircle } from "lucide-react"
 
 export function KpiCard() {
     const [kpiData, setKpiData] = useState<{
-        kpi1Attendance: number, kpi2Timeliness: number,
+        kpi1Attendance: number,
+        kpi2Timeliness: number,
+        kpi3InternalMeetings: number,
         totalDaysLogged: number;
     } | null>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -64,8 +66,9 @@ export function KpiCard() {
     // percentage hishab
     const kpi1Percent = (kpiData.kpi1Attendance / 10) * 100;
     const kpi2Percent = (kpiData.kpi2Timeliness / 10) * 100;
+    const kpi3Percent = (kpiData.kpi3InternalMeetings / 10) * 100;
     //average KPI for dashboard (will be changed later with other KPI's)
-    const averageScore = ((kpiData.kpi1Attendance + kpiData.kpi2Timeliness) / 2).toFixed(1);
+    const averageScore = ((kpiData.kpi1Attendance + kpiData.kpi2Timeliness + kpiData.kpi3InternalMeetings) / 3).toFixed(1);
     return (
         <Card className="rounded-none border-2 border-slate-200 shadow-none hover:border-primary transition-colors bg-white h-[350px] flex flex-col">
             <CardHeader className="border-b-2 border-slate-100 pb-4 shrink-0">
@@ -113,6 +116,19 @@ export function KpiCard() {
                         </div>
                         <Progress value={kpi2Percent} className="h-2 rounded-none bg-slate-100" />
                     </div>
+                    {/* KPI 3: Internal Meetings */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-end">
+                            <span className="text-[10px] font-bold font-mono text-slate-500 uppercase tracking-widest">
+                                KPI_3: Internal Meetings
+                            </span>
+                            <span className="text-xs font-black font-mono text-slate-800">
+                                {kpiData.kpi3InternalMeetings.toFixed(1)} <span className="text-slate-400 font-normal">/ 10</span>
+                            </span>
+                        </div>
+                        <Progress value={kpi3Percent} className="h-2 rounded-none bg-slate-100" />
+                    </div>
+
                 </div>
                 {/* Footer Metadata */}
                 <div className="mt-4 flex justify-between items-center border-t-2 border-dashed border-slate-100 pt-4 shrink-0">
