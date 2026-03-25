@@ -12,6 +12,31 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// --- Diagnostic Routes ---
+// check if the server is even alive and CORS is working
+app.get('/api/debug/ping', (req, res) => {
+    res.json({
+        message: "Pong! The server is alive.",
+        time: new Date().toISOString(),
+        env: process.env.NODE_ENV
+    });
+});
+
+// check database connection directly and catch the RAW error
+app.get('/api/debug/db-raw', async (req, res) => {
+    try {
+        const count = await prisma.user.count();
+        res.json({ status: "Database Connected", userCount: count });
+    } catch (err: any) {
+        console.error("DEBUG DB ERROR:", err);
+        res.status(500).json({
+            status: "Database Connection Failed",
+            error: err.message,
+            stack: err.stack
+        });
+    }
+});
+
 // Basic health check route
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'Ok', message: 'Autolinium API is running' });
