@@ -3,43 +3,36 @@
 import { useState, useEffect } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { Target, Activity, AlertCircle } from "lucide-react"
+import Link from "next/link"
 
 export function KpiCard() {
     const [kpiData, setKpiData] = useState<{
-        kpi1Attendance: number,
-        kpi2Timeliness: number,
-        kpi3InternalMeetings: number,
+        totalSoFar: number,
         totalDaysLogged: number;
     } | null>(null)
     const [isLoading, setIsLoading] = useState(true)
 
-
     useEffect(() => {
         const fetchKpiStatus = async () => {
-            // 1. Get user from storage
             const userStr = localStorage.getItem("user");
             if (!userStr) return;
             const user = JSON.parse(userStr);
 
             try {
-                // 2. Use user.id instead of hardcoded 1
+                // Fetching directly from Live Vercel Backend
                 const response = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/kpi/status/${user.id}`);
                 const result = await response.json();
 
                 if (response.ok) {
                     setKpiData(result)
                 }
-            }
-            catch (error) {
+            } catch (error) {
                 console.error("failed to fetch KPI status:", error);
-            }
-            finally { setIsLoading(false); }
+            } finally { setIsLoading(false); }
         };
 
         fetchKpiStatus();
-
     }, [])
 
     if (isLoading) {
@@ -63,75 +56,36 @@ export function KpiCard() {
         )
     }
 
-    // percentage hishab
-    const kpi1Percent = (kpiData.kpi1Attendance / 10) * 100;
-    const kpi2Percent = (kpiData.kpi2Timeliness / 10) * 100;
-    const kpi3Percent = (kpiData.kpi3InternalMeetings / 10) * 100;
-    //average KPI for dashboard (will be changed later with other KPI's)
-    const averageScore = ((kpiData.kpi1Attendance + kpiData.kpi2Timeliness + kpiData.kpi3InternalMeetings) / 3).toFixed(1);
     return (
-        <Card className="rounded-none border-2 border-slate-200 shadow-none hover:border-primary transition-colors bg-white h-[350px] flex flex-col">
+        <Card className="rounded-none border-2 border-slate-200 shadow-none hover:border-primary transition-colors bg-white h-[350px] flex flex-col relative group">
+            <Link href="/kpi" className="absolute inset-0 z-10" />
             <CardHeader className="border-b-2 border-slate-100 pb-4 shrink-0">
                 <CardTitle className="font-mono text-sm tracking-widest text-slate-500 uppercase font-bold flex justify-between items-center pr-2">
                     <div className="flex items-center gap-2">
                         <Target className="w-4 h-4 text-primary" />
-                        Live_Metrics
+                        Total_KPI_Score
                     </div>
-                    <Badge variant="outline" className="text-[9px] rounded-none">
-                        AUTO_CALC
+                    <Badge variant="outline" className="text-[9px] rounded-none group-hover:bg-primary group-hover:text-white transition-colors">
+                        VIEW_DETAILS
                     </Badge>
                 </CardTitle>
             </CardHeader>
-            <CardContent className="pt-6 flex-1 flex flex-col justify-between">
+            <CardContent className="pt-6 flex-1 flex flex-col justify-center items-center text-center">
+
+                <div className="text-[10px] tracking-widest font-mono text-slate-400 uppercase mb-4 font-bold">
+                    Running Total (KPI 1-3)
+                </div>
 
                 {/* Master Score Display */}
                 <div className="flex items-baseline gap-2">
-                    <div className="text-4xl font-black font-mono tracking-tighter text-slate-800 tabular-nums">
-                        {averageScore}
+                    <div className="text-7xl font-black font-mono tracking-tighter text-slate-800 tabular-nums">
+                        {kpiData.totalSoFar.toFixed(1)}
                     </div>
-                    <div className="text-xs font-bold text-slate-400 font-mono tracking-widest">/ 10 AVG</div>
+                    <div className="text-sm font-bold text-slate-400 font-mono tracking-widest">/ 30.0</div>
                 </div>
-                <div className="space-y-6 mt-4">
-                    {/* KPI 1: Attendance */}
-                    <div className="space-y-2">
-                        <div className="flex justify-between items-end">
-                            <span className="text-[10px] font-bold font-mono text-slate-500 uppercase tracking-widest">
-                                KPI_1: Attendance
-                            </span>
-                            <span className="text-xs font-black font-mono text-slate-800">
-                                {kpiData.kpi1Attendance.toFixed(1)} <span className="text-slate-400 font-normal">/ 10</span>
-                            </span>
-                        </div>
-                        <Progress value={kpi1Percent} className="h-2 rounded-none bg-slate-100" />
-                    </div>
-                    {/* KPI 2: Timeliness */}
-                    <div className="space-y-2">
-                        <div className="flex justify-between items-end">
-                            <span className="text-[10px] font-bold font-mono text-slate-500 uppercase tracking-widest">
-                                KPI_2: Timeliness
-                            </span>
-                            <span className="text-xs font-black font-mono text-slate-800">
-                                {kpiData.kpi2Timeliness.toFixed(2)} <span className="text-slate-400 font-normal">/ 10</span>
-                            </span>
-                        </div>
-                        <Progress value={kpi2Percent} className="h-2 rounded-none bg-slate-100" />
-                    </div>
-                    {/* KPI 3: Internal Meetings */}
-                    <div className="space-y-2">
-                        <div className="flex justify-between items-end">
-                            <span className="text-[10px] font-bold font-mono text-slate-500 uppercase tracking-widest">
-                                KPI_3: Internal Meetings
-                            </span>
-                            <span className="text-xs font-black font-mono text-slate-800">
-                                {kpiData.kpi3InternalMeetings.toFixed(1)} <span className="text-slate-400 font-normal">/ 10</span>
-                            </span>
-                        </div>
-                        <Progress value={kpi3Percent} className="h-2 rounded-none bg-slate-100" />
-                    </div>
 
-                </div>
                 {/* Footer Metadata */}
-                <div className="mt-4 flex justify-between items-center border-t-2 border-dashed border-slate-100 pt-4 shrink-0">
+                <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center border-t-2 border-dashed border-slate-100 pt-4">
                     <div className="text-[9px] text-slate-400 font-mono uppercase font-bold tracking-tighter flex items-center gap-1">
                         <Activity className="w-3 h-3 text-primary animate-pulse" />
                         Scanning: {kpiData.totalDaysLogged} Records
@@ -144,7 +98,3 @@ export function KpiCard() {
         </Card>
     )
 }
-
-
-
-
