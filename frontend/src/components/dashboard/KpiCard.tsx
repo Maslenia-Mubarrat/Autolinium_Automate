@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Target, Activity, AlertCircle } from "lucide-react"
 import Link from "next/link"
+import { API_URL } from "@/lib/api";
 
 export function KpiCard() {
     const [kpiData, setKpiData] = useState<{
@@ -20,8 +21,8 @@ export function KpiCard() {
             const user = JSON.parse(userStr);
 
             try {
-                // Fetching directly from Live Vercel Backend
-                const response = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/kpi/status/${user.id}`);
+                // Fetching via dynamic API_URL
+                const response = await fetch(`${API_URL}/api/kpi/status/${user.id}`);
                 const result = await response.json();
 
                 if (response.ok) {

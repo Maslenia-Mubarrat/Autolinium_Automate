@@ -4,12 +4,13 @@ import { useState, useEffect } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ClipboardList, UserCheck, UserMinus, History } from "lucide-react"
+import { API_URL } from "@/lib/api";
 
 export function GlobalMeetingLog() {
     const [meetings, setMeetings] = useState<any>(null);
 
     const fetchAll = () => {
-        fetch('https://autolinium-automate-vgk4.vercel.app/api/meetings/admin/all')
+        fetch(`${API_URL}/api/meetings/admin/all`)
             .then(res => res.json())
             .then(data => setMeetings(data));
     };

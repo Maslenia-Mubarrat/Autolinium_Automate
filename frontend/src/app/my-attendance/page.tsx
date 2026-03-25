@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar as CalendarIcon, Clock, MapPin } from "lucide-react"
+import { API_URL } from "@/lib/api";
 
 export default function MyAttendancePage() {
     const [history, setHistory] = useState([])
@@ -17,7 +18,7 @@ export default function MyAttendancePage() {
 
             try {
                 // We'll reuse the attendance check route but for all history
-                const response = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/attendance/user/${user.id}`)
+                const response = await fetch(`${API_URL}/api/attendance/user/${user.id}`)
                 const data = await response.json()
                 setHistory(data)
             } catch (error) {

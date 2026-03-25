@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Clock, Fingerprint, AlertCircle } from "lucide-react"
+import { API_URL } from "@/lib/api";
 
 export function AttendanceCard() {
     // 1. Reactive State
@@ -34,7 +35,7 @@ export function AttendanceCard() {
 
         try {
             //second thing- we will now use user.id
-            const response = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/attendance/status/${user.id}`);
+            const response = await fetch(`${API_URL}/api/attendance/status/${user.id}`);
             const result = await response.json();
 
             if (result.checkedIn) {
@@ -80,7 +81,7 @@ export function AttendanceCard() {
         const user = JSON.parse(userStr);
         setIsLoading(true);
         try {
-            const response = await fetch('https://autolinium-automate-vgk4.vercel.app/api/attendance/check-in', {
+            const response = await fetch(`${API_URL}/api/attendance/check-in`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -106,7 +107,7 @@ export function AttendanceCard() {
         const user = JSON.parse(userStr);
         setIsLoading(true);
         try {
-            const response = await fetch('https://autolinium-automate-vgk4.vercel.app/api/attendance/check-out', {
+            const response = await fetch(`${API_URL}/api/attendance/check-out`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: user.id })

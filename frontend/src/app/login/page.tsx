@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Fingerprint, AlertCircle } from "lucide-react"
+import { API_URL } from "@/lib/api";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("")
@@ -20,7 +21,7 @@ export default function LoginPage() {
         setError("")
 
         try {
-            const res = await fetch("https://autolinium-automate-vgk4.vercel.app/api/auth/login", {
+            const res = await fetch(`${API_URL}/api/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),

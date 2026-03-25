@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Star, Users, Send } from "lucide-react"
+import { API_URL } from "@/lib/api";
 
 interface User { id: number; name: string; employeeId: string; }
 interface PeerReview {
@@ -27,8 +28,8 @@ export default function PeerReviewPage() {
             setCurrentUser(user);
             setIsAdmin(user.role === "ADMIN");
         }
-        fetch("https://autolinium-automate-vgk4.vercel.app/api/users/list").then(r => r.json()).then(setColleagues);
-        fetch("https://autolinium-automate-vgk4.vercel.app/api/peer-review/all").then(r => r.json()).then(setAllReviews);
+        fetch(`${API_URL}/api/users/list`).then(r => r.json()).then(setColleagues);
+        fetch(`${API_URL}/api/peer-review/all`).then(r => r.json()).then(setAllReviews);
     }, []);
 
     const handleSubmit = async () => {
@@ -36,14 +37,14 @@ export default function PeerReviewPage() {
         if (parseInt(selectedTarget) === currentUser.id) return alert("You cannot review yourself.");
         setSubmitting(true);
         const now = new Date();
-        await fetch("https://autolinium-automate-vgk4.vercel.app/api/peer-review", {
+        await fetch(`${API_URL}/api/peer-review`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ reviewerId: currentUser.id, targetUserId: selectedTarget, month: now.getMonth() + 1, year: now.getFullYear(), ...scores })
         });
         alert("✅ Peer review submitted!");
         setSubmitting(false);
-        fetch("https://autolinium-automate-vgk4.vercel.app/api/peer-review/all").then(r => r.json()).then(setAllReviews);
+        fetch(`${API_URL}/api/peer-review/all`).then(r => r.json()).then(setAllReviews);
     };
 
     const ScoreInput = ({ label, field }: { label: string; field: keyof typeof scores }) => (

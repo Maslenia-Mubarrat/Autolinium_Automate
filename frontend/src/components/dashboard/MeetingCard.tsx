@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Users, Clock } from "lucide-react"
 import { Button } from "../ui/button"
+import { API_URL } from "@/lib/api";
 
 export function MeetingCard() {
     const [meetings, setMeetings] = useState
@@ -20,7 +21,7 @@ export function MeetingCard() {
         const user = JSON.parse(userStr);
         try {
             const response = await
-                fetch(`https://autolinium-automate-vgk4.vercel.app/api/meetings/user/${user.id}`);
+                fetch(`${API_URL}/api/meetings/user/${user.id}`);
             const data = await response.json();
             setMeetings(data);
         }
@@ -48,7 +49,7 @@ export function MeetingCard() {
 
         try {
             const response = await
-                fetch(`https://autolinium-automate-vgk4.vercel.app/api/meetings/${endpoint}`,
+                fetch(`${API_URL}/api/meetings/${endpoint}`,
                     {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },

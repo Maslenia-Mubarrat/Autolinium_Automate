@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Users, Calendar, Clock, ShieldCheck, CheckSquare, Square } from "lucide-react"
+import { API_URL } from "@/lib/api";
 
 interface UserList {
     id: number;
@@ -23,7 +24,7 @@ export function AdminCommandBoard() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        fetch('https://autolinium-automate-vgk4.vercel.app/api/users/list')
+        fetch(`${API_URL}/api/users/list`)
             .then(res => res.json())
             .then(data => setStaff(data));
     }, []);
@@ -58,7 +59,7 @@ export function AdminCommandBoard() {
         };
 
         try {
-            const res = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/meetings/${endpoint}`, {
+            const res = await fetch(`${API_URL}/api/meetings/${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

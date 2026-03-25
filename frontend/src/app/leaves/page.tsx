@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Palmtree, Check, X, Clock, User } from "lucide-react"
+import { API_URL } from "@/lib/api";
 
 interface LeaveRequet {
     id: number;
@@ -26,7 +27,7 @@ export default function AdminLeavePage() {
     const fetchLeaves = async () => {
         try {
             const res = await
-                fetch("https://autolinium-automate-vgk4.vercel.app/api/leave/all")
+                fetch(`${API_URL}/api/leave/all`)
             const data = await res.json()
             if (res.ok) setLeaves(data)
         }
@@ -42,7 +43,7 @@ export default function AdminLeavePage() {
     const handleAction = async (id: number, status: "APPROVED" | "REJECTED") => {
         try {
             const res = await
-                fetch(`https://autolinium-automate-vgk4.vercel.app/api/leave/${id}/status`, {
+                fetch(`${API_URL}/api/leave/${id}/status`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ status })

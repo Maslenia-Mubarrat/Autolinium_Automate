@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ClipboardList, Plus, CheckCircle2, Loader2, User as UserIcon, Clock } from "lucide-react"
+import { API_URL } from "@/lib/api";
 
 interface Task {
     id: number;
@@ -39,7 +40,7 @@ export function TaskBoard() {
 
         try {
             // 2. Now the computer knows what user.id is
-            const response = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/tasks/user/${user.id}`);
+            const response = await fetch(`${API_URL}/api/tasks/user/${user.id}`);
             const data = await response.json();
             if (response.ok) {
                 setTasks(data);
@@ -61,7 +62,7 @@ export function TaskBoard() {
             setSelectedAssigneeId(parsedUser.id.toString()); // Default to self
 
             if (parsedUser.role === 'ADMIN') {
-                fetch('https://autolinium-automate-vgk4.vercel.app/api/users/list')
+                fetch(`${API_URL}/api/users/list`)
                     .then(res => res.json())
                     .then(data => setStaff(data));
             }
@@ -83,7 +84,7 @@ export function TaskBoard() {
         setIsCreating(true);
         try {
             const response = await
-                fetch('https://autolinium-automate-vgk4.vercel.app/api/tasks',
+                fetch(`${API_URL}/api/tasks`,
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -131,7 +132,7 @@ export function TaskBoard() {
         if (reason === null) return; // User clicked Cancel
 
         try {
-            const response = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/tasks/${task.id}/status`, {
+            const response = await fetch(`${API_URL}/api/tasks/${task.id}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

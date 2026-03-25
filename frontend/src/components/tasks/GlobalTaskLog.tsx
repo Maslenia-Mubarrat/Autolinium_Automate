@@ -3,12 +3,13 @@ import { useState, useEffect } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { History, Clock, User } from "lucide-react"
+import { API_URL } from "@/lib/api";
 
 export function GlobalTaskLog() {
     const [tasks, setTasks] = useState<any[]>([]);
 
     const fetchTasks = () => {
-        fetch('https://autolinium-automate-vgk4.vercel.app/api/tasks/admin/all')
+        fetch(`${API_URL}/api/tasks/admin/all`)
             .then(res => res.json())
             .then(data => setTasks(data));
     };
@@ -35,7 +36,7 @@ export function GlobalTaskLog() {
         if (comment === null) return;
 
         try {
-            const response = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/tasks/${taskId}/review`, {
+            const response = await fetch(`${API_URL}/api/tasks/${taskId}/review`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

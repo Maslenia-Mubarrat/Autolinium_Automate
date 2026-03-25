@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Clock } from "lucide-react"
+import { API_URL } from "@/lib/api";
 
 type AttendanceRecord = {
     id: number
@@ -30,7 +31,7 @@ export default function AttendancePage() {
 
     const fetchToday = async () => {
         try {
-            const res = await fetch('https://autolinium-automate-vgk4.vercel.app/api/attendance/today')
+            const res = await fetch(`${API_URL}/api/attendance/today`)
             const json = await res.json()
             setData(json)
         } catch (err) {
@@ -46,7 +47,7 @@ export default function AttendancePage() {
 
     const handleApproveLate = async (id: number) => {
         try {
-            const response = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/attendance/approve-late/${id}`, {
+            const response = await fetch(`${API_URL}/api/attendance/approve-late/${id}`, {
                 method: 'PATCH'
             });
             if (response.ok) {

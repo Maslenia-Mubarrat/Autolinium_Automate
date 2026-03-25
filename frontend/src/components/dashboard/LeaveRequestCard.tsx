@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock, Send, Palmtree, CheckCircle2, RefreshCw } from "lucide-react"
+import { API_URL } from "@/lib/api";
 
 export function LeaveRequestCard() {
     const [startDate, setStartDate] = useState("")
@@ -23,7 +24,7 @@ export function LeaveRequestCard() {
         const user = JSON.parse(userStr)
 
         try {
-            const res = await fetch(`https://autolinium-automate-vgk4.vercel.app/api/leave/user/${user.id}`)
+            const res = await fetch(`${API_URL}/api/leave/user/${user.id}`)
             const data = await res.json()
             if (res.ok) setUserLeaves(data)
         } catch (err) {
@@ -49,7 +50,7 @@ export function LeaveRequestCard() {
 
         try {
             const res = await
-                fetch("https://autolinium-automate-vgk4.vercel.app/api/leave/request", {
+                fetch(`${API_URL}/api/leave/request`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
