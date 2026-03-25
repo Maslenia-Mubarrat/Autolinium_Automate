@@ -350,9 +350,84 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
             }
         }
 
+        // KPI 4: Client Meetings (starts at 10)
+        let kpi4 = 10;
+        const clientMeetings = await prisma.clientMeetingAttendee.findMany({
+            where: {
+                userId: parseInt(userId),
+                meeting: {
+                    scheduledTime: { gte: monthStart, lt: monthEnd }
+                }
+            },
+            include: {
+                meeting: true
+            }
+        });
+
+        for (const attendance of clientMeetings) {
+            // Apply admin's behavior penalty directly
+            if (attendance.behaviorPenalty > 0) {
+                kpi4 -= attendance.behaviorPenalty;
+            }
+
+            if (attendance.status === 'INFORMED_SKIP') {
+                kpi4 -= 3;
+            } else if (attendance.status === 'UNINFORMED_SKIP') {
+                kpi4 -= 6;
+            } else if (attendance.status === 'ATTENDED' && attendance.joinTime) {
+                // Calculate lateness based on meeting's scheduled time
+                const scheduledUTC = new Date(attendance.meeting.scheduledTime);
+                const joinUTC = new Date(attendance.joinTime);
+
+                const lateMs = Math.max(0, joinUTC.getTime() - scheduledUTC.getTime());
+                const lateMinutes = lateMs / (1000 * 60);
+
+                if (lateMinutes > 0) {
+                    const deduction = Math.floor(lateMinutes / 5) * 0.5; // -0.5 points per 5 mins late
+                    kpi4 -= deduction;
+                }
+            }
+        }
+
+        // KPI 5: Peer Review (starts at 0 as per company policy)
+        let kpi5 = 0;
+
+        // Find all reviews where this user was the target for the current month
+        const peerReviews = await prisma.peerReview.findMany({
+            where: {
+                targetUserId: parseInt(userId),
+                month: month,
+                year: year
+            }
+        });
+
+        // If peers reviewed them, calculate the exact average
+        if (peerReviews.length > 0) {
+            let totalAvgSum = 0;
+
+            for (const review of peerReviews) {
+                const reviewAvg = (
+                    review.respectScore +
+                    review.helpfulnessScore +
+                    review.attitudeScore +
+                    review.conflictScore +
+                    review.knowledgeShareScore
+                ) / 5.0; // The UI uses 1-10, so this average is safely out of 10!
+
+                totalAvgSum += reviewAvg;
+            }
+
+            // Average across ALL peers who reviewed this person
+            kpi5 = totalAvgSum / peerReviews.length;
+        }
+
+
+
         kpi1 = Math.min(10, Math.max(0, kpi1));
         kpi2 = Math.min(10, Math.max(0, kpi2));
         kpi3 = Math.min(10, Math.max(0, kpi3));
+        kpi4 = Math.min(10, Math.max(0, kpi4));
+        kpi5 = Math.min(10, Math.max(0, kpi5));
 
 
 
@@ -367,7 +442,9 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
             kpi1Attendance: kpi1,
             kpi2Timeliness: kpi2,
             kpi3InternalMeetings: kpi3,
-            totalSoFar: kpi1 + kpi2 + kpi3
+            kpi4ClientMeetings: kpi4,
+            kpi5PeerReview: kpi5,
+            totalSoFar: kpi1 + kpi2 + kpi3 + kpi4 + kpi5
         });
 
 

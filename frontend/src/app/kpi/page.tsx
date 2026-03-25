@@ -11,6 +11,8 @@ export default function KpiPage() {
         kpi1Attendance: number,
         kpi2Timeliness: number,
         kpi3InternalMeetings: number,
+        kpi4ClientMeetings: number,
+        kpi5PeerReview: number,
         totalSoFar: number,
     } | null>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -46,9 +48,8 @@ export default function KpiPage() {
         { id: 1, name: "Attendance", score: kpiData.kpi1Attendance, max: 10 },
         { id: 2, name: "Timeliness", score: kpiData.kpi2Timeliness, max: 10 },
         { id: 3, name: "Internal Meetings", score: kpiData.kpi3InternalMeetings, max: 10 },
-        // We will add 4 through 9 here later!
-        { id: 4, name: "Client Meetings", score: 0, max: 10 },
-        { id: 5, name: "Peer Review", score: 0, max: 10 },
+        { id: 4, name: "Client Meetings", score: kpiData.kpi4ClientMeetings, max: 10 },
+        { id: 5, name: "Peer Review", score: kpiData.kpi5PeerReview, max: 10 },
         { id: 6, name: "Deadlines", score: 0, max: 10 },
         { id: 7, name: "Weekly Report", score: 0, max: 10 },
         { id: 8, name: "Value Added", score: 0, max: 25 },
@@ -91,7 +92,7 @@ export default function KpiPage() {
                 {/* KPI Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {kpis.map((kpi) => {
-                        const isPending = kpi.score === 0 && kpi.id > 3; // Temporary logic until we build them
+                        const isPending = kpi.score === 0 && kpi.id > 5; // Temporary logic until we build them
                         const percent = (kpi.score / kpi.max) * 100;
 
                         return (
