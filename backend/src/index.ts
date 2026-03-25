@@ -1,16 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { MeetingStatus, PrismaClient } from '@prisma/client';
-import { PrismaPg } from "@prisma/adapter-pg";
-import pg from "pg";
+import { PrismaClient } from '@prisma/client';
 
 dotenv.config();
 
 const app = express();
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
@@ -83,6 +79,7 @@ app.get('/api/users/list', async (req, res) => {
         });
         res.status(200).json(users);
     } catch (error) {
+        console.error("User List Fetch Error:", error);
         res.status(500).json({ error: 'Failed to fetch user list' });
     }
 });
@@ -577,6 +574,7 @@ app.get('/api/tasks/user/:userId', async (req, res) => {
         });
         res.status(200).json(tasks);
     } catch (error) {
+        console.error("User Task Fetch Error:", error);
         res.status(500).json({ error: "Failed to fetch user tasks" });
     }
 });
