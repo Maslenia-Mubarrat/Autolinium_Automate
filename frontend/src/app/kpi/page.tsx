@@ -15,6 +15,7 @@ export default function KpiPage() {
         kpi4ClientMeetings: number,
         kpi5PeerReview: number,
         kpi6ProjectTask: number,
+        kpi7WeeklyReport: number,
         totalSoFar: number,
     } | null>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -53,7 +54,7 @@ export default function KpiPage() {
         { id: 4, name: "Client Meetings", score: kpiData.kpi4ClientMeetings, max: 10 },
         { id: 5, name: "Peer Review", score: kpiData.kpi5PeerReview, max: 10 },
         { id: 6, name: "Deadlines", score: kpiData.kpi6ProjectTask, max: 10 },
-        { id: 7, name: "Weekly Report", score: 0, max: 10 },
+        { id: 7, name: "Weekly Report", score: kpiData.kpi7WeeklyReport, max: 10 },
         { id: 8, name: "Value Added", score: 0, max: 25 },
         { id: 9, name: "Innovation", score: 0, max: 5 },
     ]
@@ -107,7 +108,7 @@ export default function KpiPage() {
                                         </Badge>
                                         <div className="text-right">
                                             <div className="text-2xl font-black font-mono tabular-nums text-slate-800">
-                                                {kpi.score.toFixed(1)}
+                                                {(kpi.score || 0).toFixed(1)}
                                             </div>
                                             <div className="text-[9px] font-bold font-mono text-slate-400 tracking-widest">
                                                 / {kpi.max}.0 MAX

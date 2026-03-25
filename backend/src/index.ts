@@ -481,8 +481,60 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
 
             }
         }
-
         kpi6 = Math.max(0, 10 - totalPenalty);
+
+        // --- KPI 7: Weekly Report (Advanced Logic) ---
+        let kpi7 = 10;
+        const weekScores: number[] = [];
+
+        // 1. Identify all Fridays in the current month that have passed
+        const now = new Date();
+        let d = new Date(year, month - 1, 1);
+        while (d.getMonth() === month - 1) {
+            if (d.getDay() === 5) { // 5 = Friday
+                const fridayDeadline = new Date(d);
+                fridayDeadline.setHours(14, 0, 0, 0); // 2:00 PM
+
+                if (fridayDeadline < now) {
+                    let weekScore = 10;
+
+                    // Look for a report for this specific week
+                    // We assume 'weekStartDate' is used to identify the specific work week
+                    const report = await prisma.weeklyReport.findFirst({
+                        where: {
+                            userId: parseInt(userId),
+                            submittedAt: {
+                                gte: new Date(d.getTime() - 4 * 24 * 60 * 60 * 1000), // Monday of that week
+                                lte: new Date(d.getTime() + 2 * 24 * 60 * 60 * 1000)  // Sunday of that week
+                            }
+                        }
+                    });
+
+                    if (!report) {
+                        weekScore -= 6; // Missed submission
+                    } else {
+                        // Check if late (after Friday 2 PM)
+                        if (new Date(report.submittedAt) > fridayDeadline) {
+                            weekScore -= 3;
+                        }
+                        // Check knowledge share (Boolean field in your DB)
+                        if (report.missingKnowledgeShare === true) {
+                            weekScore -= 2;
+                        }
+                    }
+                    weekScores.push(Math.max(0, weekScore));
+                }
+            }
+            d.setDate(d.getDate() + 1);
+        }
+
+        // 2. Calculate average of all passed weeks
+        if (weekScores.length > 0) {
+            kpi7 = weekScores.reduce((a, b) => a + b, 0) / weekScores.length;
+        }
+
+
+
 
 
 
@@ -497,6 +549,7 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
         kpi4 = Math.min(10, Math.max(0, kpi4));
         kpi5 = Math.min(10, Math.max(0, kpi5));
         kpi6 = Math.min(10, Math.max(0, kpi6));
+        kpi7 = Math.min(10, Math.max(0, kpi7));
 
 
 
@@ -515,7 +568,8 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
             kpi4ClientMeetings: kpi4,
             kpi5PeerReview: kpi5,
             kpi6ProjectTask: kpi6,
-            totalSoFar: kpi1 + kpi2 + kpi3 + kpi4 + kpi5 + kpi6
+            kpi7WeeklyReport: kpi7, // <--- Add this line
+            totalSoFar: kpi1 + kpi2 + kpi3 + kpi4 + kpi5 + kpi6 + kpi7
         });
 
 

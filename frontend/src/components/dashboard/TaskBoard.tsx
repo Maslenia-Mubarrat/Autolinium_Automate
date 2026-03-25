@@ -113,38 +113,39 @@ export function TaskBoard() {
 
     };
     //Mark a task as done
-    const handleMarkDone = async (task: Task) => { // Change: We pass the whole task object now
+    const handleMarkDone = async (task: Task) => {
         const isLate = new Date(task.deadline) < new Date();
+        let validReason = "";
 
-        // 1. If late, the message is much more "Serious"
-        const promptMessage = isLate
-            ? "⚠️ THIS TASK IS LATE. You MUST provide an explanation for the delay:"
-            : "Mission Accomplished! Enter a quick completion note:";
+        // 1. If late, ask for both Note and Reason
+        const note = prompt(isLate ? "Task is LATE. Enter completion note:" : "Enter completion note:");
+        if (note === null) return;
 
-        const reason = prompt(promptMessage);
-
-        // 2. ENFORCEMENT: If it's late and they leave it blank, we STOP them.
-        if (isLate && (!reason || reason.trim().length < 5)) {
-            alert("🚨 ERROR: You cannot close a LATE task without a valid explanation (minimum 5 characters).");
-            return;
+        if (isLate) {
+            const vReason = prompt("⚠️ REQUIRED: Enter valid reason for the delay (for Admin review):");
+            if (!vReason || vReason.trim().length < 5) {
+                alert("Delay reason is too short for review.");
+                return;
+            }
+            validReason = vReason;
         }
 
-        if (reason === null) return; // User clicked Cancel
-
         try {
-            const response = await fetch(`${API_URL}/api/tasks/${task.id}/status`, {
+            await fetch(`${API_URL}/api/tasks/${task.id}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     status: 'DONE',
-                    completionNote: reason || "Task completed on time."
+                    completionNote: note,
+                    validReason: validReason // <--- Send the reason to the backend
                 })
             });
-            if (response.ok) fetchTasks();
+            fetchTasks();
         } catch (error) {
             console.error("Update task failed:", error);
         }
     };
+
 
     return (
         <Card className="task-board-root-container rounded-none border-2 border-slate-200 shadow-none hover:border-primary transition-colors bg-white h-[350px] flex flex-col">
