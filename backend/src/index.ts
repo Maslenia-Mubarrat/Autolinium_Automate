@@ -449,6 +449,46 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
             kpi5 = totalAvgSum / peerReviews.length;
         }
 
+        // --- KPI 6: Deadlines & Task Performance (Starts at 10) ---
+        let kpi6 = 10;
+        let totalPenalty = 0;
+
+        const completedTasks = await prisma.task.findMany({
+            where: {
+                assigneeId: parseInt(userId),
+                status: 'DONE',
+                completedAt: { gte: monthStart, lt: monthEnd }
+            }
+        });
+
+        for (const task of completedTasks) {
+            // 1. If Admin accepted the reason, there is NO penalty
+            if (task.isReasonAccepted === true) continue;
+
+            if (task.completedAt && task.deadline) {
+                const completedDate = new Date(task.completedAt);
+                const deadlineDate = new Date(task.deadline);
+
+                // 2. Calculate delay in days
+                if (completedDate > deadlineDate) {
+                    const diffTime = completedDate.getTime() - deadlineDate.getTime();
+                    const delayDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    // 3. Penalty = 0.5 x delay_days
+                    totalPenalty += (0.5 * delayDays);
+                }
+
+
+            }
+        }
+
+        kpi6 = Math.max(0, 10 - totalPenalty);
+
+
+
+
+
+
 
 
         kpi1 = Math.min(10, Math.max(0, kpi1));
@@ -456,6 +496,8 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
         kpi3 = Math.min(10, Math.max(0, kpi3));
         kpi4 = Math.min(10, Math.max(0, kpi4));
         kpi5 = Math.min(10, Math.max(0, kpi5));
+        kpi6 = Math.min(10, Math.max(0, kpi6));
+
 
 
 
@@ -472,7 +514,8 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
             kpi3InternalMeetings: kpi3,
             kpi4ClientMeetings: kpi4,
             kpi5PeerReview: kpi5,
-            totalSoFar: kpi1 + kpi2 + kpi3 + kpi4 + kpi5
+            kpi6ProjectTask: kpi6,
+            totalSoFar: kpi1 + kpi2 + kpi3 + kpi4 + kpi5 + kpi6
         });
 
 

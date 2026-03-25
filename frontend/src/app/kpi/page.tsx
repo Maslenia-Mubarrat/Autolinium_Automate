@@ -14,6 +14,7 @@ export default function KpiPage() {
         kpi3InternalMeetings: number,
         kpi4ClientMeetings: number,
         kpi5PeerReview: number,
+        kpi6ProjectTask: number,
         totalSoFar: number,
     } | null>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -51,7 +52,7 @@ export default function KpiPage() {
         { id: 3, name: "Internal Meetings", score: kpiData.kpi3InternalMeetings, max: 10 },
         { id: 4, name: "Client Meetings", score: kpiData.kpi4ClientMeetings, max: 10 },
         { id: 5, name: "Peer Review", score: kpiData.kpi5PeerReview, max: 10 },
-        { id: 6, name: "Deadlines", score: 0, max: 10 },
+        { id: 6, name: "Deadlines", score: kpiData.kpi6ProjectTask, max: 10 },
         { id: 7, name: "Weekly Report", score: 0, max: 10 },
         { id: 8, name: "Value Added", score: 0, max: 25 },
         { id: 9, name: "Innovation", score: 0, max: 5 },

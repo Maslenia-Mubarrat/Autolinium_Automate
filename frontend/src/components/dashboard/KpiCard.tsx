@@ -74,7 +74,7 @@ export function KpiCard() {
             <CardContent className="pt-6 flex-1 flex flex-col justify-center items-center text-center">
 
                 <div className="text-[10px] tracking-widest font-mono text-slate-400 uppercase mb-4 font-bold">
-                    Running Total (KPI 1-5)
+                    Running Total (KPI 1-9)
                 </div>
 
                 {/* Master Score Display */}
@@ -82,7 +82,7 @@ export function KpiCard() {
                     <div className="text-7xl font-black font-mono tracking-tighter text-slate-800 tabular-nums">
                         {kpiData.totalSoFar.toFixed(1)}
                     </div>
-                    <div className="text-sm font-bold text-slate-400 font-mono tracking-widest">/ 50.0</div>
+                    <div className="text-sm font-bold text-slate-400 font-mono tracking-widest">/ 100.0</div>
                 </div>
 
                 {/* Footer Metadata */}
