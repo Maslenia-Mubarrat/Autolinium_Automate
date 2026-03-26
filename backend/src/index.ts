@@ -48,6 +48,56 @@ app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'Ok', message: 'Autolinium API is running' });
 });
 
+// --- ADMIN: Summary of all employees with their current averages ---
+app.get('/api/admin/kpi/summary-all', async (req, res) => {
+    try {
+        const users = await prisma.user.findMany({
+            select: { id: true, name: true, employeeId: true }
+        });
+        const summaryData = await Promise.all(users.map(async (user) => {
+            // Internally fetch the current KPI status for the summary
+            const kpiRes = await fetch(`http://localhost:${PORT}/api/kpi/status/${user.id}`);
+            const kpiData: any = await kpiRes.json();
+            return {
+                ...user,
+                totalScore: kpiData.totalSoFar || 0
+            };
+        }));
+        res.json(summaryData);
+    } catch (error) {
+        console.error("Summary error:", error);
+        res.status(500).json({ error: "Failed to fetch summaries" });
+    }
+});
+// --- ADMIN: Manual Save for KPI 8 (Max 25) and KPI 9 (Max 5) ---
+app.post('/api/admin/kpi/manual-save', async (req, res) => {
+    const { userId, month, year, kpi8, kpi9 } = req.body;
+    try {
+        const existing = await prisma.monthlyKPI.findFirst({
+            where: { userId, month, year }
+        });
+        const data = {
+            userId, month, year,
+            kpi8ValueAdded: kpi8 !== undefined ? parseFloat(kpi8) : undefined,
+            kpi9Innovation: kpi9 !== undefined ? parseFloat(kpi9) : undefined,
+        };
+        if (existing) {
+            await prisma.monthlyKPI.update({ where: { id: existing.id }, data });
+        } else {
+            await prisma.monthlyKPI.create({
+                data: {
+                    ...data,
+                    kpi8ValueAdded: kpi8 || 0,
+                    kpi9Innovation: kpi9 || 0
+                }
+            });
+        }
+        res.json({ success: true, message: "Scores saved!" });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to save score" });
+    }
+});
+
 // --- Authentication: Login Route ---
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
@@ -259,6 +309,17 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
     const monthEnd = new Date(year, month, 1);
 
     try {
+
+
+        // 0. Fetch Manual KPI
+        const manualKpi: any = await prisma.monthlyKPI.findFirst({
+            where: {
+                userId: parseInt(userId),
+                month: month,
+                year: year
+            }
+        });
+
         // 1. Fetch attendance records
         const records = await prisma.attendance.findMany({
             where: {
@@ -543,6 +604,8 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
 
 
 
+
+
         kpi1 = Math.min(10, Math.max(0, kpi1));
         kpi2 = Math.min(10, Math.max(0, kpi2));
         kpi3 = Math.min(10, Math.max(0, kpi3));
@@ -550,6 +613,10 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
         kpi5 = Math.min(10, Math.max(0, kpi5));
         kpi6 = Math.min(10, Math.max(0, kpi6));
         kpi7 = Math.min(10, Math.max(0, kpi7));
+
+        const kpi8 = manualKpi?.kpi8ValueAdded || 0;
+        const kpi9 = manualKpi?.kpi9Innovation || 0;
+
 
 
 
@@ -568,8 +635,10 @@ app.get('/api/kpi/status/:userId', async (req, res) => {
             kpi4ClientMeetings: kpi4,
             kpi5PeerReview: kpi5,
             kpi6ProjectTask: kpi6,
-            kpi7WeeklyReport: kpi7, // <--- Add this line
-            totalSoFar: kpi1 + kpi2 + kpi3 + kpi4 + kpi5 + kpi6 + kpi7
+            kpi7WeeklyReport: kpi7,
+            kpi8ValueAdded: kpi8,
+            kpi9Innovation: kpi9,
+            totalSoFar: kpi1 + kpi2 + kpi3 + kpi4 + kpi5 + kpi6 + kpi7 + kpi8 + kpi9
         });
 
 

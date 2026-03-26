@@ -51,7 +51,13 @@ const items = [
         title: "Peer Review",
         url: "/peer-review",
         icon: Star
+    },
+    {
+        title: "KPI Manager",
+        url: "/admin/kpi-manager",
+        icon: ClipboardList, // This will give it a report icon
     }
+
 ]
 
 export function AppSidebar() {
