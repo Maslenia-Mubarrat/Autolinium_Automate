@@ -56,7 +56,9 @@ app.get('/api/admin/kpi/summary-all', async (req, res) => {
         });
         const summaryData = await Promise.all(users.map(async (user) => {
             // Internally fetch the current KPI status for the summary
-            const kpiRes = await fetch(`http://localhost:${PORT}/api/kpi/status/${user.id}`);
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+            const host = req.get('host');
+            const kpiRes = await fetch(`${protocol}://${host}/api/kpi/status/${user.id}`);
             const kpiData: any = await kpiRes.json();
             return {
                 ...user,
