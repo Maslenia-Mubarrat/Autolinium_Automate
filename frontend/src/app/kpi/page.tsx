@@ -16,6 +16,8 @@ export default function KpiPage() {
         kpi5PeerReview: number,
         kpi6ProjectTask: number,
         kpi7WeeklyReport: number,
+        kpi8ValueAdded: number,
+        kpi9Innovation: number,
         totalSoFar: number,
     } | null>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -55,8 +57,8 @@ export default function KpiPage() {
         { id: 5, name: "Peer Review", score: kpiData.kpi5PeerReview, max: 10 },
         { id: 6, name: "Deadlines", score: kpiData.kpi6ProjectTask, max: 10 },
         { id: 7, name: "Weekly Report", score: kpiData.kpi7WeeklyReport, max: 10 },
-        { id: 8, name: "Value Added", score: 0, max: 25 },
-        { id: 9, name: "Innovation", score: 0, max: 5 },
+        { id: 8, name: "Value Added", score: kpiData.kpi8ValueAdded||0, max: 25 },
+        { id: 9, name: "Innovation", score: kpiData.kpi9Innovation||0, max: 5 },
     ]
 
     return (
