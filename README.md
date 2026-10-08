@@ -14,12 +14,16 @@ The platform is designed to centralize day-to-day office management into a singl
 - Weekly reporting and employee review workflows
 - KPI-based performance scoring and incentive calculation
 
-## Tech Stack
-- Frontend: Next.js, TypeScript, Tailwind CSS
-- Backend: Express.js, TypeScript
-- Database: PostgreSQL
-- ORM: Prisma
-- Architecture: Full-stack web application with responsive dashboard UI
+## Architecture & Tech Stack
+
+| Layer | Stack | Role |
+| --- | --- | --- |
+| Client | Next.js, React, Tailwind CSS | Admin panel and responsive employee UI |
+| API | Node.js, Express.js, TypeScript | Handles business logic and exposes REST endpoints |
+| Data Layer | PostgreSQL, Prisma | Stores and manages all application data securely |
+| Security | JWT, Cookies, CORS | Handles authentication and protected API access |
+| Hosting | Vercel, Render, PostgreSQL Cloud | Deploys frontend, backend, and database services |
+| System Design | Full-stack SaaS-style internal platform | Manages attendance, KPI scoring, meetings, tasks, and reports |
 
 ## Live Link 
 https://autolinium-automate.vercel.app/
