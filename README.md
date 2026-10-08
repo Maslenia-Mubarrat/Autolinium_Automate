@@ -28,7 +28,7 @@ The platform is designed to centralize day-to-day office management into a singl
 
 ## System Architecture
 
-![Autolinium System Architecture Diagram](docs/architecture-diagram.png)
+![Autolinium System Architecture Diagram](https://github.com/Maslenia-Mubarrat/Autolinium_Automate/blob/main/docs/architecture-diagram.md)
 
 The diagram above illustrates the complete system architecture, showing how the frontend, backend, database, and business logic layers interact to provide a comprehensive KPI management solution.
 
